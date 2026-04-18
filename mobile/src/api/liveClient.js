@@ -49,3 +49,52 @@ export async function fetchLiveState({ signal } = {}) {
 export function getResolvedApiBaseUrl() {
   return resolveBaseUrl();
 }
+
+async function jsonFetch(path, { method = 'GET', body, signal } = {}) {
+  const baseUrl = resolveBaseUrl();
+  const response = await fetch(`${baseUrl}${path}`, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+    signal,
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.error || `API failed: ${response.status}`);
+  }
+  return data;
+}
+
+export function fetchTemples({ signal } = {}) {
+  return jsonFetch('/api/temples', { signal });
+}
+
+export function fetchAlerts({ status = 'active', templeId, signal } = {}) {
+  const qs = new URLSearchParams();
+  if (status) qs.set('status', status);
+  if (templeId) qs.set('templeId', templeId);
+  return jsonFetch(`/api/alerts?${qs.toString()}`, { signal });
+}
+
+export function postAck({ alertId, role }) {
+  return jsonFetch(`/api/alerts/${alertId}/ack`, { method: 'POST', body: { role } });
+}
+
+export function postAction({ alertId, role, status, notes }) {
+  return jsonFetch(`/api/alerts/${alertId}/actions`, {
+    method: 'POST',
+    body: { role, status, notes },
+  });
+}
+
+export function fetchLogs({ signal } = {}) {
+  return jsonFetch('/api/logs', { signal });
+}
+
+export function setReplayControl({ mode, speed, paused, seekIndex }) {
+  return jsonFetch('/api/replay/control', { method: 'POST', body: { mode, speed, paused, seekIndex } });
+}
+
+export function registerDevice({ role, expoPushToken }) {
+  return jsonFetch('/api/devices/register', { method: 'POST', body: { role, expoPushToken } });
+}

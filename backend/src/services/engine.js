@@ -1,5 +1,5 @@
 // OWNER - KARDAM
-// PURPOSE - Combine stream + CPI + prediction + classification into one stable integration contract: getCurrentState().
+// PURPOSE - Combine stream + CPI + prediction + classification into stable integration contracts for single and all CCTV states.
 
 const { getLatestRow, getLatestRows, getStreamMeta } = require("../data/streamSimulator");
 const { calculateCPI } = require("../utils/calculateCPI");

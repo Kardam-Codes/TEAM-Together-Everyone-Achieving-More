@@ -5,6 +5,8 @@ const express = require('express');
 const cors = require('cors');
 
 const { initAllStreams, startStream, getStreamMeta } = require('./data/streamSimulator');
+const { ensureSomnathCorridorsFromManifest } = require('./services/templeService');
+const { startLiveAggregation } = require('./services/liveStateService');
 
 const app = express();
 
@@ -22,10 +24,12 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 
   try {
+    ensureSomnathCorridorsFromManifest();
     initAllStreams({
       emitIntervalMs: Number(process.env.STREAM_INTERVAL_MS) || 1000,
     });
     startStream();
+    startLiveAggregation({ templeId: "somnath" });
     const meta = getStreamMeta();
     console.log(`Stream started for tables: ${(meta.tableNames || []).join(', ')}`);
   } catch (err) {
