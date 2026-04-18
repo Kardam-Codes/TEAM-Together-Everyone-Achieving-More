@@ -11,8 +11,8 @@ app.use(cors());
 app.use(express.json());
 
 // Placeholder for mounting routes - routes will be added in liveRoutes.js
-// const liveRoutes = require('./routes/liveRoutes');
-// app.use('/api', liveRoutes);
+const liveRoutes = require('./routes/liveRoutes');
+app.use('/api', liveRoutes);
 
 const PORT = process.env.PORT || 3000;
 
