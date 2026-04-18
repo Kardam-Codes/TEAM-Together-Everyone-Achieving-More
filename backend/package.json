@@ -1,0 +1,18 @@
+{
+  "name": "team-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OWNER - ASU | PURPOSE - Express backend for live crowd monitoring APIs backed by dataset stream simulator and logic engine.",
+  "owner": "ASU",
+  "purpose": "Express backend for live crowd monitoring APIs backed by dataset stream simulator and logic engine.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}
+

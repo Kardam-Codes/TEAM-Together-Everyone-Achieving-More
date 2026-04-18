@@ -2,6 +2,7 @@
 # PURPOSE - Ignore generated dependency folders and Expo local state.
 
 node_modules/
+.npm-cache/
 .env
 .expo/
 .expo-shared/

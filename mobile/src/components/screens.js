@@ -4,7 +4,7 @@
 import React from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { actions, trend, zones } from '../data/incidentData';
+import { actions, trend as fallbackTrend, zones as fallbackZones } from '../data/incidentData';
 import { styles } from '../styles/appStyles';
 import { colorForStatus } from '../theme';
 import { LineChart, MetricRow, StatusPill } from './common';
@@ -24,7 +24,8 @@ export function Header({ data }) {
   );
 }
 
-export function AlertScreen({ data, onActions }) {
+export function AlertScreen({ data, onActions, zones, onSelectZone }) {
+  const zoneData = Array.isArray(zones) && zones.length ? zones : fallbackZones;
   return (
     <ScrollView contentContainerStyle={styles.scrollContent}>
       <View style={[styles.card, styles.incidentCard]}>
@@ -59,7 +60,7 @@ export function AlertScreen({ data, onActions }) {
       </View>
 
       <MetricStrip data={data} />
-      <ZoneStatusList />
+      <ZoneStatusList zones={zoneData} onSelectZone={onSelectZone} />
     </ScrollView>
   );
 }
@@ -81,7 +82,8 @@ export function ActionsScreen({ data }) {
   );
 }
 
-export function MetricsScreen({ data }) {
+export function MetricsScreen({ data, trend }) {
+  const values = Array.isArray(trend) && trend.length ? trend : fallbackTrend;
   return (
     <ScrollView contentContainerStyle={styles.scrollContent}>
       <View style={styles.card}>
@@ -100,7 +102,7 @@ export function MetricsScreen({ data }) {
           </View>
           <Text style={styles.warningLabel}>Rising</Text>
         </View>
-        <LineChart values={trend} dangerAt={data.safeDensity} />
+        <LineChart values={values} dangerAt={data.safeDensity} />
       </View>
     </ScrollView>
   );
@@ -127,13 +129,17 @@ function MetricStrip({ data }) {
   );
 }
 
-function ZoneStatusList() {
+function ZoneStatusList({ zones, onSelectZone }) {
   return (
     <View style={styles.card}>
       <Text style={styles.sectionTitle}>Zone status</Text>
       <View style={styles.zoneList}>
         {zones.map(zone => (
-          <View key={zone.label} style={styles.zoneRow}>
+          <Pressable
+            key={zone.label}
+            style={styles.zoneRow}
+            onPress={() => (typeof onSelectZone === 'function' ? onSelectZone(zone.label) : null)}
+          >
             <View style={styles.zoneLeft}>
               <View style={[styles.statusBar, { backgroundColor: colorForStatus(zone.status) }]} />
               <View>
@@ -142,7 +148,7 @@ function ZoneStatusList() {
               </View>
             </View>
             <Text style={styles.zoneDensity}>{zone.density.toFixed(1)} people/m2</Text>
-          </View>
+          </Pressable>
         ))}
       </View>
     </View>
