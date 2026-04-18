@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState } from "react";
 import {
   Pressable,
   SafeAreaView,
@@ -6,511 +6,194 @@ import {
   StatusBar,
   StyleSheet,
   Text,
-  TextInput,
-  useWindowDimensions,
   View,
-} from 'react-native';
+} from "react-native";
 
-const theme = {
-  colors: {
-    primary: '#1F7A63',
-    primaryDark: '#17614E',
-    secondary: '#34C38F',
-    accent: '#FF6B6B',
-    background: '#F5F7F6',
-    surface: '#FFFFFF',
-    card: '#FFFFFF',
-    border: '#E6EAE8',
-    textPrimary: '#1A1D1C',
-    textSecondary: '#6B7280',
-    textMuted: '#9CA3AF',
-    success: '#22C55E',
-    warning: '#F59E0B',
-    error: '#EF4444',
-    tint: '#E8F5F0',
-  },
-  spacing: {
-    xxs: 4,
-    xs: 8,
-    sm: 12,
-    md: 16,
-    lg: 20,
-    xl: 24,
-    xxl: 32,
-    xxxl: 40,
-    sectionGap: 32,
-    containerPadding: 24,
-  },
-  radius: {
-    small: 8,
-    medium: 12,
-    large: 20,
-    pill: 999,
-  },
-  shadow: {
-    light: {
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.06,
-      shadowRadius: 6,
-      elevation: 2,
-    },
-    medium: {
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.08,
-      shadowRadius: 16,
-      elevation: 4,
-    },
-    soft: {
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.1,
-      shadowRadius: 30,
-      elevation: 6,
-    },
-  },
-  type: {
-    h1: { fontSize: 28, lineHeight: 34, fontWeight: '700' },
-    h2: { fontSize: 22, lineHeight: 28, fontWeight: '600' },
-    h3: { fontSize: 18, lineHeight: 24, fontWeight: '600' },
-    bodyLarge: { fontSize: 16, lineHeight: 24, fontWeight: '500' },
-    bodyMedium: { fontSize: 14, lineHeight: 21, fontWeight: '400' },
-    bodySmall: { fontSize: 12, lineHeight: 17, fontWeight: '400' },
-    caption: { fontSize: 11, lineHeight: 14, fontWeight: '400' },
-    button: { fontSize: 14, lineHeight: 18, fontWeight: '600', letterSpacing: 0.3 },
-  },
+const palette = {
+  background: "#F4F6F8",
+  surface: "#FFFFFF",
+  surfaceMuted: "#EEF2F5",
+  surfaceDark: "#17202A",
+  text: "#16202A",
+  textMuted: "#5B6773",
+  textSubtle: "#7A8793",
+  border: "#D8DEE5",
+  danger: "#C62828",
+  dangerSoft: "#FDECEC",
+  warning: "#B26A00",
+  warningSoft: "#FFF4DE",
+  safe: "#1B7F4C",
+  safeSoft: "#EAF7EF",
+  inactive: "#98A2AD",
+  inactiveSoft: "#EDF0F2",
+  primary: "#2457A6",
+  primarySoft: "#E8F0FE",
 };
 
-const statCards = [
-  { label: 'Win Projection', value: '74%', delta: '+8.2%', tone: 'success' },
-  { label: 'Possession Value', value: '1.28', delta: '+0.12', tone: 'primary' },
-  { label: 'High Press Rate', value: '63%', delta: '+5.4%', tone: 'warning' },
-  { label: 'Conversion Risk', value: '12%', delta: '-2.1%', tone: 'accent' },
-];
-
-const rankingRows = [
-  { name: 'North Harbor FC', form: 'WWDWW', rating: '92.4', xg: '2.18' },
-  { name: 'Victory Eleven', form: 'WWWLW', rating: '89.7', xg: '1.94' },
-  { name: 'Riverside Club', form: 'WDWLW', rating: '86.3', xg: '1.61' },
-  { name: 'Capital Athletic', form: 'LWWDW', rating: '83.9', xg: '1.42' },
-];
-
-const fixtures = [
-  { team: 'Victory Eleven', meta: 'Home • Sun 18:30', score: 'vs Metro Stars' },
-  { team: 'North Harbor FC', meta: 'Away • Wed 20:00', score: 'vs Riverside Club' },
-  { team: 'Capital Athletic', meta: 'Home • Fri 19:15', score: 'vs Red Summit' },
-];
-
-const feedItems = [
-  { title: 'Set-piece efficiency spiked by 14%', time: '12 min ago' },
-  { title: 'Defensive line recovered 8 loose balls in zone 14', time: '42 min ago' },
-  { title: 'Training load flagged for two midfielders', time: '1 hr ago' },
-  { title: 'Analyst note: wing overloads outperform baseline by 0.24 xG', time: '3 hr ago' },
-];
-
-const profileOptions = ['Matchday Dashboard', 'Performance Review', 'Scouting Pack'];
-
-const getToneColor = tone => {
-  switch (tone) {
-    case 'success':
-      return theme.colors.success;
-    case 'warning':
-      return theme.colors.warning;
-    case 'accent':
-      return theme.colors.accent;
-    default:
-      return theme.colors.primary;
-  }
+const incident = {
+  status: "Danger",
+  statusLevel: "danger",
+  temple: "Somnath Temple",
+  corridor: "Main Entry Gate",
+  sector: "Sector 4",
+  title: "Crowd density rising",
+  predictedRiskIn: "08:00",
+  density: 4.8,
+  safeDensity: 3.5,
+  flowImbalance: "+31 people/min",
+  exitRoutes: "4 open",
+  updatedAt: "04:23 live",
+  reasons: [
+    "Density is above safe limit.",
+    "More people are entering than exiting.",
+    "Walking speed is dropping.",
+  ],
 };
 
-function App() {
-  const { width } = useWindowDimensions();
-  const [selectedProfile, setSelectedProfile] = useState(profileOptions[0]);
-  const [formState, setFormState] = useState({
-    club: 'Victory Eleven',
-    analyst: 'A. Morgan',
-    objective: 'Track transitions and identify efficient shot zones.',
-  });
+const zones = [
+  { label: "Sector 4", area: "Main Entry Gate", status: "danger", density: 4.8 },
+  { label: "Corridor A", area: "North corridor", status: "warning", density: 3.7 },
+  { label: "Queue Lane", area: "Holding area", status: "safe", density: 2.4 },
+];
 
-  const layout = useMemo(() => {
-    const maxWidth = Math.min(width, 1200);
-    const isDesktop = width >= 1080;
-    const isTablet = width >= 720;
-    return {
-      contentWidth: maxWidth,
-      isDesktop,
-      isTablet,
-      statColumns: isDesktop ? 4 : isTablet ? 2 : 1,
-      lowerColumns: isDesktop ? 3 : 1,
-    };
-  }, [width]);
+const actions = [
+  {
+    id: "police",
+    title: "Dispatch police unit",
+    target: "Sector 4 / Main Entry Gate",
+    owner: "Police Control",
+    note: "Move crowd-control unit 04 to the entry checkpoint.",
+    primary: true,
+  },
+  {
+    id: "entry",
+    title: "Pause entry",
+    target: "Main Entry Gate",
+    owner: "Temple Authority",
+    note: "Hold incoming visitors for 5 minutes.",
+  },
+  {
+    id: "transport",
+    title: "Hold shuttles",
+    target: "Transport queue",
+    owner: "Transport Control",
+    note: "Delay new arrivals until density drops.",
+  },
+];
+
+const trend = [2.7, 2.9, 3.2, 3.4, 3.8, 4.1, 4.5, 4.8];
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState("alert");
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" />
-      <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
-        <View style={[styles.appShell, { width: layout.contentWidth }]}>
-          <View style={styles.navbar}>
-            <View style={styles.brandBlock}>
-              <View style={styles.brandBadge}>
-                <Text style={styles.brandBadgeText}>VE</Text>
-              </View>
-              <View>
-                <Text style={styles.navEyebrow}>Victory Greens Premium Sports UI</Text>
-                <Text style={styles.navTitle}>Match Intelligence Console</Text>
-              </View>
-            </View>
-            <View style={styles.navActions}>
-              <Pill label="Live Sync" tone="positive" />
-              <Pressable style={({ pressed }) => [styles.ghostButton, pressed && styles.pressed]}>
-                <Text style={styles.ghostButtonText}>Export</Text>
-              </Pressable>
-            </View>
-          </View>
+    <SafeAreaView style={styles.app}>
+      <StatusBar barStyle="light-content" backgroundColor={palette.surfaceDark} />
+      <Header data={incident} />
 
-          <View style={[styles.heroGrid, layout.isDesktop && styles.heroGridDesktop]}>
-            <Card style={[styles.heroCard, layout.isDesktop && styles.heroCardDesktop]}>
-              <View style={styles.heroTopRow}>
-                <Pill label="Matchday Ready" />
-                <Text style={styles.heroMeta}>Updated 2 minutes ago</Text>
-              </View>
-              <Text style={styles.heroHeading}>Actionable team insights with clear rhythm, layered cards, and fast scan depth.</Text>
-              <Text style={styles.heroDescription}>
-                A premium, sports-analytics inspired workspace built for quick decisions across performance, scouting, and match preparation.
-              </Text>
+      <View style={styles.content}>
+        {activeTab === "alert" ? <AlertScreen data={incident} onActions={() => setActiveTab("actions")} /> : null}
+        {activeTab === "actions" ? <ActionsScreen data={incident} /> : null}
+        {activeTab === "metrics" ? <MetricsScreen data={incident} /> : null}
+      </View>
 
-              <View style={[styles.heroStatsRow, !layout.isTablet && styles.heroStatsColumn]}>
-                <View style={styles.heroMetric}>
-                  <Text style={styles.heroMetricValue}>18</Text>
-                  <Text style={styles.heroMetricLabel}>Active reports</Text>
-                </View>
-                <View style={styles.heroMetric}>
-                  <Text style={styles.heroMetricValue}>92%</Text>
-                  <Text style={styles.heroMetricLabel}>Data confidence</Text>
-                </View>
-                <View style={styles.heroMetric}>
-                  <Text style={styles.heroMetricValue}>6.4h</Text>
-                  <Text style={styles.heroMetricLabel}>Prep time saved</Text>
-                </View>
-              </View>
-
-              <View style={styles.buttonRow}>
-                <TactileButton label="Open Dashboard" kind="primary" />
-                <TactileButton label="View Reports" kind="secondary" />
-              </View>
-            </Card>
-
-            <Card style={styles.snapshotCard}>
-              <Text style={styles.sectionLabel}>Performance Snapshot</Text>
-              <Text style={styles.snapshotTitle}>Team momentum is building through compact transitions.</Text>
-              <MiniBars />
-              <View style={styles.snapshotList}>
-                <SnapshotRow label="Counter Pressing" value="Elite" />
-                <SnapshotRow label="Final Third Entries" value="+18%" />
-                <SnapshotRow label="Defensive Shape" value="Stable" />
-              </View>
-            </Card>
-          </View>
-
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Core Metrics</Text>
-            <Text style={styles.sectionCopy}>High-level indicators arranged on a strict 8pt rhythm for instant readability.</Text>
-          </View>
-
-          <View style={styles.gridWrap}>
-            {statCards.map(item => (
-              <View
-                key={item.label}
-                style={[
-                  styles.gridItem,
-                  {
-                    width: layout.isDesktop
-                      ? '24%'
-                      : layout.isTablet
-                        ? '48.5%'
-                        : '100%',
-                  },
-                ]}
-              >
-                <Card interactive>
-                  <Text style={styles.statLabel}>{item.label}</Text>
-                  <Text style={styles.statValue}>{item.value}</Text>
-                  <View style={styles.statFooter}>
-                    <View style={[styles.deltaDot, { backgroundColor: getToneColor(item.tone) }]} />
-                    <Text style={[styles.deltaText, { color: getToneColor(item.tone) }]}>{item.delta}</Text>
-                  </View>
-                </Card>
-              </View>
-            ))}
-          </View>
-
-          <View style={[styles.analyticsGrid, layout.isDesktop && styles.analyticsGridDesktop]}>
-            <Card style={[styles.panelCard, layout.isDesktop && styles.analyticsLeadCard]} interactive>
-              <View style={styles.panelHeader}>
-                <View>
-                  <Text style={styles.sectionLabel}>Trend Overview</Text>
-                  <Text style={styles.panelTitle}>Shot quality vs defensive recovery</Text>
-                </View>
-                <Pill label="Last 5 Matches" />
-              </View>
-              <TrendChart />
-              <View style={styles.inlineMetrics}>
-                <InlineMetric label="Peak xG" value="2.36" />
-                <InlineMetric label="Recoveries" value="48" />
-                <InlineMetric label="Field Tilt" value="61%" />
-              </View>
-            </Card>
-
-            <Card style={styles.panelCard} interactive>
-              <View style={styles.panelHeader}>
-                <View>
-                  <Text style={styles.sectionLabel}>League Table</Text>
-                  <Text style={styles.panelTitle}>Power rankings</Text>
-                </View>
-                <Text style={styles.panelHint}>Updated live</Text>
-              </View>
-              <View style={styles.tableHead}>
-                <Text style={[styles.tableHeadText, styles.tableTeam]}>Club</Text>
-                <Text style={styles.tableHeadText}>Rating</Text>
-                <Text style={styles.tableHeadText}>xG</Text>
-              </View>
-              {rankingRows.map(row => (
-                <View key={row.name} style={styles.tableRow}>
-                  <View style={styles.tableTeamWrap}>
-                    <View style={styles.rankBadge}>
-                      <Text style={styles.rankBadgeText}>{rankingRows.indexOf(row) + 1}</Text>
-                    </View>
-                    <View>
-                      <Text style={styles.tableTeamName}>{row.name}</Text>
-                      <Text style={styles.tableMeta}>{row.form}</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.tableCell}>{row.rating}</Text>
-                  <Text style={styles.tableCell}>{row.xg}</Text>
-                </View>
-              ))}
-            </Card>
-          </View>
-
-          <View style={[styles.lowerGrid, layout.isDesktop && styles.lowerGridDesktop]}>
-            <Card style={styles.panelCard} interactive>
-              <View style={styles.panelHeader}>
-                <View>
-                  <Text style={styles.sectionLabel}>Upcoming Fixtures</Text>
-                  <Text style={styles.panelTitle}>Schedule focus</Text>
-                </View>
-                <Pill label="3 Matches" />
-              </View>
-              {fixtures.map(item => (
-                <View key={item.team} style={styles.listRow}>
-                  <View>
-                    <Text style={styles.listTitle}>{item.team}</Text>
-                    <Text style={styles.listMeta}>{item.meta}</Text>
-                  </View>
-                  <Text style={styles.listValue}>{item.score}</Text>
-                </View>
-              ))}
-            </Card>
-
-            <Card style={styles.panelCard} interactive>
-              <View style={styles.panelHeader}>
-                <View>
-                  <Text style={styles.sectionLabel}>Analyst Feed</Text>
-                  <Text style={styles.panelTitle}>Latest notes</Text>
-                </View>
-                <Text style={styles.panelHint}>Team channel</Text>
-              </View>
-              {feedItems.map(item => (
-                <View key={item.title} style={styles.feedItem}>
-                  <View style={styles.feedDot} />
-                  <View style={styles.feedContent}>
-                    <Text style={styles.feedTitle}>{item.title}</Text>
-                    <Text style={styles.feedTime}>{item.time}</Text>
-                  </View>
-                </View>
-              ))}
-            </Card>
-
-            <Card style={styles.panelCard} interactive>
-              <View style={styles.panelHeader}>
-                <View>
-                  <Text style={styles.sectionLabel}>Build Report</Text>
-                  <Text style={styles.panelTitle}>Quick configuration</Text>
-                </View>
-                <Text style={styles.panelHint}>Ready to export</Text>
-              </View>
-
-              <Text style={styles.inputLabel}>Report profile</Text>
-              <View style={styles.segmentedControl}>
-                {profileOptions.map(option => {
-                  const active = selectedProfile === option;
-                  return (
-                    <Pressable
-                      key={option}
-                      onPress={() => setSelectedProfile(option)}
-                      style={({ pressed }) => [
-                        styles.segment,
-                        active && styles.segmentActive,
-                        pressed && styles.pressed,
-                      ]}
-                    >
-                      <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{option}</Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-
-              <Text style={styles.inputLabel}>Club name</Text>
-              <StyledInput
-                value={formState.club}
-                onChangeText={club => setFormState(current => ({ ...current, club }))}
-                placeholder="Enter club"
-              />
-
-              <Text style={styles.inputLabel}>Lead analyst</Text>
-              <StyledInput
-                value={formState.analyst}
-                onChangeText={analyst => setFormState(current => ({ ...current, analyst }))}
-                placeholder="Enter analyst"
-              />
-
-              <Text style={styles.inputLabel}>Objective</Text>
-              <StyledInput
-                value={formState.objective}
-                onChangeText={objective => setFormState(current => ({ ...current, objective }))}
-                placeholder="Summarize objective"
-                multiline
-              />
-
-              <View style={styles.formActions}>
-                <TactileButton label="Generate Pack" kind="primary" />
-                <TactileButton label="Save Draft" kind="ghost" />
-              </View>
-            </Card>
-          </View>
-        </View>
-      </ScrollView>
+      <BottomNavigation activeTab={activeTab} onChange={setActiveTab} />
     </SafeAreaView>
   );
 }
 
-function Card({ children, style, interactive = false }) {
-  if (interactive) {
-    return (
-      <Pressable
-        style={({ pressed, hovered }) => [
-          styles.card,
-          hovered && styles.cardHovered,
-          pressed && styles.pressed,
-          style,
-        ]}
-      >
-        {children}
-      </Pressable>
-    );
-  }
-
-  return <View style={[styles.card, style]}>{children}</View>;
-}
-
-function TactileButton({ label, kind }) {
-  const variantStyle =
-    kind === 'primary'
-      ? styles.buttonPrimary
-      : kind === 'secondary'
-        ? styles.buttonSecondary
-        : styles.buttonGhost;
-
-  const textStyle =
-    kind === 'primary'
-      ? styles.buttonPrimaryText
-      : kind === 'secondary'
-        ? styles.buttonSecondaryText
-        : styles.buttonGhostText;
-
+function Header({ data }) {
   return (
-    <Pressable style={({ pressed, hovered }) => [styles.buttonBase, variantStyle, hovered && styles.buttonHover, pressed && styles.pressed]}>
-      <Text style={[styles.buttonTextBase, textStyle]}>{label}</Text>
-    </Pressable>
-  );
-}
-
-function StyledInput({ multiline = false, ...props }) {
-  return (
-    <TextInput
-      {...props}
-      multiline={multiline}
-      placeholderTextColor={theme.colors.textMuted}
-      style={[styles.input, multiline && styles.inputMultiline]}
-    />
-  );
-}
-
-function Pill({ label, tone }) {
-  return (
-    <View style={[styles.pill, tone === 'positive' && styles.pillPositive]}>
-      <Text style={[styles.pillText, tone === 'positive' && styles.pillTextPositive]}>{label}</Text>
+    <View style={styles.header}>
+      <View style={styles.headerText}>
+        <Text style={styles.appName}>Stampede Prediction</Text>
+        <Text style={styles.place}>{data.temple}</Text>
+        <Text style={styles.path}>
+          {data.corridor} / {data.sector}
+        </Text>
+      </View>
+      <StatusPill level={data.statusLevel} label={data.status} />
     </View>
   );
 }
 
-function SnapshotRow({ label, value }) {
+function AlertScreen({ data, onActions }) {
   return (
-    <View style={styles.snapshotRow}>
-      <Text style={styles.snapshotRowLabel}>{label}</Text>
-      <Text style={styles.snapshotRowValue}>{value}</Text>
-    </View>
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={[styles.card, styles.incidentCard]}>
+        {/* Keep the main incident card short: location, issue, timer, reasons, action. */}
+        <View style={styles.rowBetween}>
+          <StatusPill level={data.statusLevel} label={data.status} />
+          <Text style={styles.updatedAt}>{data.updatedAt}</Text>
+        </View>
+
+        <Text style={styles.incidentTitle}>{data.title}</Text>
+        <Text style={styles.incidentLocation}>
+          {data.corridor}, {data.sector}
+        </Text>
+
+        <View style={styles.timerBox}>
+          <Text style={styles.timerLabel}>Predicted risk in</Text>
+          <Text style={styles.timerValue}>{data.predictedRiskIn}</Text>
+        </View>
+
+        <View style={styles.reasonList}>
+          {data.reasons.map((reason) => (
+            <View key={reason} style={styles.reasonRow}>
+              <View style={styles.reasonDot} />
+              <Text style={styles.reasonText}>{reason}</Text>
+            </View>
+          ))}
+        </View>
+
+        <Pressable style={styles.primaryButton} onPress={onActions}>
+          <Text style={styles.primaryButtonText}>Dispatch police unit</Text>
+          <Text style={styles.primaryButtonMeta}>Sector 4 / Main Entry Gate</Text>
+        </Pressable>
+      </View>
+
+      <MetricStrip data={data} />
+      <ZoneStatusList />
+    </ScrollView>
   );
 }
 
-function InlineMetric({ label, value }) {
-  return (
-    <View style={styles.inlineMetric}>
-      <Text style={styles.inlineMetricValue}>{value}</Text>
-      <Text style={styles.inlineMetricLabel}>{label}</Text>
-    </View>
-  );
-}
-
-function MiniBars() {
-  const bars = [58, 74, 66, 88, 70, 82, 64];
+function MetricStrip({ data }) {
+  const metrics = [
+    { label: "Density", value: `${data.density}`, helper: `safe ${data.safeDensity}`, status: "danger" },
+    { label: "Flow", value: data.flowImbalance, helper: "entry vs exit", status: "warning" },
+    { label: "Exits", value: data.exitRoutes, helper: "available", status: "safe" },
+  ];
 
   return (
-    <View style={styles.miniBarsWrap}>
-      {bars.map((height, index) => (
-        <View key={`${height}-${index}`} style={styles.miniBarTrack}>
-          <View style={[styles.miniBarFill, { height: `${height}%` }]} />
+    <View style={styles.metricStrip}>
+      {metrics.map((metric) => (
+        <View key={metric.label} style={styles.stripItem}>
+          <View style={[styles.smallDot, { backgroundColor: colorForStatus(metric.status) }]} />
+          <Text style={styles.stripLabel}>{metric.label}</Text>
+          <Text style={styles.stripValue}>{metric.value}</Text>
+          <Text style={styles.stripHelper}>{metric.helper}</Text>
         </View>
       ))}
     </View>
   );
 }
 
-function TrendChart() {
-  const columns = [
-    { label: 'M1', home: 72, away: 46 },
-    { label: 'M2', home: 80, away: 52 },
-    { label: 'M3', home: 64, away: 58 },
-    { label: 'M4', home: 88, away: 61 },
-    { label: 'M5', home: 76, away: 54 },
-  ];
-
+function ZoneStatusList() {
   return (
-    <View style={styles.chartWrap}>
-      <View style={styles.chartGrid}>
-        {[0, 1, 2, 3].map(line => (
-          <View key={line} style={styles.chartLine} />
-        ))}
-      </View>
-      <View style={styles.chartColumns}>
-        {columns.map(column => (
-          <View key={column.label} style={styles.chartColumn}>
-            <View style={styles.chartBarPair}>
-              <View style={[styles.chartBarPrimary, { height: `${column.home}%` }]} />
-              <View style={[styles.chartBarSecondary, { height: `${column.away}%` }]} />
+    <View style={styles.card}>
+      <Text style={styles.sectionTitle}>Zone status</Text>
+      <View style={styles.zoneList}>
+        {zones.map((zone) => (
+          <View key={zone.label} style={styles.zoneRow}>
+            <View style={styles.zoneLeft}>
+              <View style={[styles.statusBar, { backgroundColor: colorForStatus(zone.status) }]} />
+              <View>
+                <Text style={styles.zoneName}>{zone.label}</Text>
+                <Text style={styles.zoneArea}>{zone.area}</Text>
+              </View>
             </View>
-            <Text style={styles.chartLabel}>{column.label}</Text>
+            <Text style={styles.zoneDensity}>{zone.density.toFixed(1)} people/m2</Text>
           </View>
         ))}
       </View>
@@ -518,643 +201,622 @@ function TrendChart() {
   );
 }
 
+function ActionsScreen({ data }) {
+  return (
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Actions for {data.sector}</Text>
+        <Text style={styles.sectionSubtitle}>
+          {data.status}: {data.title.toLowerCase()} at {data.corridor}.
+        </Text>
+      </View>
+
+      {actions.map((action) => (
+        <ActionCard key={action.id} action={action} />
+      ))}
+    </ScrollView>
+  );
+}
+
+function ActionCard({ action }) {
+  return (
+    <View style={[styles.card, action.primary ? styles.primaryActionCard : styles.actionCard]}>
+      <View style={styles.actionTop}>
+        <View style={styles.actionCopy}>
+          <Text style={styles.actionOwner}>{action.owner}</Text>
+          <Text style={styles.actionTitle}>{action.title}</Text>
+          <Text style={styles.actionTarget}>{action.target}</Text>
+          <Text style={styles.actionNote}>{action.note}</Text>
+        </View>
+        {action.primary ? <Text style={styles.primaryTag}>Primary</Text> : null}
+      </View>
+
+      <Pressable style={action.primary ? styles.dispatchButton : styles.secondaryButton}>
+        <Text style={action.primary ? styles.dispatchText : styles.secondaryText}>
+          {action.primary ? "Dispatch now" : "Send instruction"}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function MetricsScreen({ data }) {
+  return (
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Key metrics</Text>
+        <MetricRow label="Crowd density" value={`${data.density} people/m2`} status="danger" />
+        <MetricRow label="Safe density" value={`${data.safeDensity} people/m2`} status="inactive" />
+        <MetricRow label="Flow imbalance" value={data.flowImbalance} status="warning" />
+        <MetricRow label="Exit routes" value={data.exitRoutes} status="safe" />
+      </View>
+
+      <View style={styles.card}>
+        <View style={styles.rowBetween}>
+          <View>
+            <Text style={styles.sectionTitle}>Density trend</Text>
+            <Text style={styles.sectionSubtitle}>Last 8 minutes</Text>
+          </View>
+          <Text style={styles.warningLabel}>Rising</Text>
+        </View>
+        <LineChart values={trend} dangerAt={data.safeDensity} />
+      </View>
+    </ScrollView>
+  );
+}
+
+function MetricRow({ label, value, status }) {
+  return (
+    <View style={styles.metricRow}>
+      <View style={styles.metricLabelWrap}>
+        <View style={[styles.smallDot, { backgroundColor: colorForStatus(status) }]} />
+        <Text style={styles.metricRowLabel}>{label}</Text>
+      </View>
+      <Text style={styles.metricRowValue}>{value}</Text>
+    </View>
+  );
+}
+
+function LineChart({ values, dangerAt }) {
+  const points = useMemo(() => {
+    const min = Math.min(...values, 0);
+    const max = Math.max(...values, dangerAt);
+    const range = max - min || 1;
+
+    return values.map((value, index) => ({
+      left: `${(index / (values.length - 1)) * 100}%`,
+      bottom: `${((value - min) / range) * 76 + 10}%`,
+      danger: value >= dangerAt,
+      value,
+    }));
+  }, [dangerAt, values]);
+
+  return (
+    <View style={styles.chart}>
+      <View style={styles.thresholdLine} />
+      <Text style={styles.thresholdText}>safe limit</Text>
+      {points.map((point, index) => (
+        <View
+          key={`${point.value}-${index}`}
+          style={[
+            styles.chartPoint,
+            {
+              left: point.left,
+              bottom: point.bottom,
+              backgroundColor: point.danger ? palette.danger : palette.primary,
+            },
+          ]}
+        />
+      ))}
+      <View style={styles.chartLabels}>
+        <Text style={styles.chartLabel}>-8 min</Text>
+        <Text style={styles.chartLabel}>now</Text>
+      </View>
+    </View>
+  );
+}
+
+function StatusPill({ level, label }) {
+  return (
+    <View style={[styles.statusPill, { backgroundColor: softColorForStatus(level), borderColor: colorForStatus(level) }]}>
+      <View style={[styles.statusDot, { backgroundColor: colorForStatus(level) }]} />
+      <Text style={[styles.statusText, { color: colorForStatus(level) }]}>{label}</Text>
+    </View>
+  );
+}
+
+function BottomNavigation({ activeTab, onChange }) {
+  const tabs = [
+    { id: "alert", label: "Alert" },
+    { id: "actions", label: "Actions" },
+    { id: "metrics", label: "Metrics" },
+  ];
+
+  return (
+    <View style={styles.bottomNav}>
+      {tabs.map((tab) => (
+        <Pressable
+          key={tab.id}
+          onPress={() => onChange(tab.id)}
+          style={[styles.navItem, activeTab === tab.id && styles.navItemActive]}
+        >
+          <Text style={[styles.navLabel, activeTab === tab.id && styles.navLabelActive]}>{tab.label}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+function colorForStatus(status) {
+  if (status === "danger") {
+    return palette.danger;
+  }
+  if (status === "warning") {
+    return palette.warning;
+  }
+  if (status === "safe") {
+    return palette.safe;
+  }
+  return palette.inactive;
+}
+
+function softColorForStatus(status) {
+  if (status === "danger") {
+    return palette.dangerSoft;
+  }
+  if (status === "warning") {
+    return palette.warningSoft;
+  }
+  if (status === "safe") {
+    return palette.safeSoft;
+  }
+  return palette.inactiveSoft;
+}
+
 const styles = StyleSheet.create({
-  safeArea: {
+  app: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: palette.background,
   },
-  screen: {
+  header: {
+    backgroundColor: palette.surfaceDark,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 14,
+  },
+  headerText: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+  },
+  appName: {
+    color: "#AEB8C2",
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "600",
+  },
+  place: {
+    color: "#FFFFFF",
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: "700",
+    marginTop: 3,
+  },
+  path: {
+    color: "#D5DCE3",
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 2,
+  },
+  content: {
+    flex: 1,
   },
   scrollContent: {
-    alignItems: 'center',
-    paddingBottom: theme.spacing.xxxl,
-  },
-  appShell: {
-    paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.lg,
-    gap: theme.spacing.sectionGap,
-  },
-  navbar: {
-    minHeight: 64,
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.large,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: theme.spacing.md,
-    ...theme.shadow.medium,
-  },
-  brandBlock: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-    flexShrink: 1,
-  },
-  brandBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: theme.radius.medium,
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  brandBadgeText: {
-    color: theme.colors.surface,
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-  },
-  navEyebrow: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: theme.type.caption.fontSize,
-    lineHeight: theme.type.caption.lineHeight,
-    fontWeight: '400',
-  },
-  navTitle: {
-    color: theme.colors.surface,
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: '600',
-  },
-  navActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end',
-  },
-  ghostButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: theme.radius.medium,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  ghostButtonText: {
-    color: theme.colors.surface,
-    fontSize: theme.type.button.fontSize,
-    lineHeight: theme.type.button.lineHeight,
-    fontWeight: theme.type.button.fontWeight,
-    letterSpacing: theme.type.button.letterSpacing,
-  },
-  heroGrid: {
-    gap: theme.spacing.lg,
-  },
-  heroGridDesktop: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-  },
-  heroCard: {
-    backgroundColor: theme.colors.card,
-    overflow: 'hidden',
-  },
-  heroCardDesktop: {
-    flex: 1.6,
-  },
-  snapshotCard: {
-    flex: 1,
-  },
-  heroTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
-    flexWrap: 'wrap',
-  },
-  heroMeta: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.type.bodySmall.fontSize,
-    lineHeight: theme.type.bodySmall.lineHeight,
-    fontWeight: '400',
-  },
-  heroHeading: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.type.h1.fontSize,
-    lineHeight: theme.type.h1.lineHeight,
-    fontWeight: theme.type.h1.fontWeight,
-    maxWidth: 640,
-  },
-  heroDescription: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.type.bodyLarge.fontSize,
-    lineHeight: theme.type.bodyLarge.lineHeight,
-    fontWeight: theme.type.bodyLarge.fontWeight,
-    marginTop: theme.spacing.md,
-    maxWidth: 620,
-  },
-  heroStatsRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    marginTop: theme.spacing.xxl,
-    marginBottom: theme.spacing.xl,
-    flexWrap: 'wrap',
-  },
-  heroStatsColumn: {
-    flexDirection: 'column',
-  },
-  heroMetric: {
-    flex: 1,
-    minWidth: 120,
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.medium,
-    padding: theme.spacing.md,
-  },
-  heroMetricValue: {
-    color: theme.colors.textPrimary,
-    fontSize: 24,
-    lineHeight: 30,
-    fontWeight: '700',
-  },
-  heroMetricLabel: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.type.bodySmall.fontSize,
-    lineHeight: theme.type.bodySmall.lineHeight,
-    marginTop: theme.spacing.xs,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-    flexWrap: 'wrap',
-  },
-  sectionHeader: {
-    gap: theme.spacing.xs,
-  },
-  sectionTitle: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.type.h2.fontSize,
-    lineHeight: theme.type.h2.lineHeight,
-    fontWeight: theme.type.h2.fontWeight,
-  },
-  sectionCopy: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.type.bodyMedium.fontSize,
-    lineHeight: theme.type.bodyMedium.lineHeight,
-    maxWidth: 660,
-  },
-  sectionLabel: {
-    color: theme.colors.textMuted,
-    fontSize: theme.type.caption.fontSize,
-    lineHeight: theme.type.caption.lineHeight,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: theme.spacing.xs,
-  },
-  gridWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    rowGap: theme.spacing.md,
-  },
-  gridItem: {
-    minWidth: 0,
+    padding: 16,
+    paddingBottom: 96,
+    gap: 14,
   },
   card: {
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.radius.large,
-    padding: theme.spacing.md,
-    ...theme.shadow.medium,
+    backgroundColor: palette.surface,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: palette.border,
+    padding: 16,
   },
-  cardHovered: {
-    ...theme.shadow.soft,
+  incidentCard: {
+    borderLeftWidth: 5,
+    borderLeftColor: palette.danger,
+    gap: 14,
   },
-  statLabel: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.type.bodySmall.fontSize,
-    lineHeight: theme.type.bodySmall.lineHeight,
+  rowBetween: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
   },
-  statValue: {
-    color: theme.colors.textPrimary,
-    fontSize: 30,
-    lineHeight: 36,
-    fontWeight: '700',
-    marginTop: theme.spacing.xs,
+  updatedAt: {
+    color: palette.textSubtle,
+    fontSize: 12,
+    lineHeight: 16,
   },
-  statFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-    marginTop: theme.spacing.lg,
+  incidentTitle: {
+    color: palette.text,
+    fontSize: 25,
+    lineHeight: 31,
+    fontWeight: "800",
   },
-  deltaDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 99,
+  incidentLocation: {
+    color: palette.textMuted,
+    fontSize: 15,
+    lineHeight: 21,
   },
-  deltaText: {
-    fontSize: theme.type.bodySmall.fontSize,
-    lineHeight: theme.type.bodySmall.lineHeight,
-    fontWeight: '600',
+  timerBox: {
+    backgroundColor: palette.dangerSoft,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#F4C9C9",
+    padding: 14,
   },
-  analyticsGrid: {
-    gap: theme.spacing.lg,
+  timerLabel: {
+    color: palette.danger,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "700",
   },
-  analyticsGridDesktop: {
-    flexDirection: 'row',
+  timerValue: {
+    color: palette.danger,
+    fontSize: 42,
+    lineHeight: 48,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
   },
-  analyticsLeadCard: {
-    flex: 1.3,
+  reasonList: {
+    gap: 8,
   },
-  panelCard: {
+  reasonRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  reasonDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: palette.danger,
+    marginTop: 7,
+  },
+  reasonText: {
     flex: 1,
+    color: palette.text,
+    fontSize: 15,
+    lineHeight: 22,
   },
-  panelHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.md,
+  primaryButton: {
+    backgroundColor: palette.primary,
+    borderRadius: 8,
+    padding: 15,
   },
-  panelTitle: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.type.h3.fontSize,
-    lineHeight: theme.type.h3.lineHeight,
-    fontWeight: theme.type.h3.fontWeight,
+  primaryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    lineHeight: 23,
+    fontWeight: "800",
   },
-  panelHint: {
-    color: theme.colors.textMuted,
-    fontSize: theme.type.bodySmall.fontSize,
-    lineHeight: theme.type.bodySmall.lineHeight,
-  },
-  tableHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingBottom: theme.spacing.sm,
-    marginBottom: theme.spacing.xs,
-  },
-  tableHeadText: {
-    color: theme.colors.textMuted,
-    fontSize: theme.type.caption.fontSize,
-    lineHeight: theme.type.caption.lineHeight,
-    fontWeight: '600',
-    width: 64,
-    textAlign: 'right',
-  },
-  tableTeam: {
-    flex: 1,
-    textAlign: 'left',
-    width: 'auto',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: theme.spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-  },
-  tableTeamWrap: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    paddingRight: theme.spacing.sm,
-  },
-  rankBadge: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: theme.colors.tint,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rankBadgeText: {
-    color: theme.colors.primary,
-    fontSize: theme.type.bodySmall.fontSize,
-    lineHeight: theme.type.bodySmall.lineHeight,
-    fontWeight: '700',
-  },
-  tableTeamName: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.type.bodyMedium.fontSize,
-    lineHeight: theme.type.bodyMedium.lineHeight,
-    fontWeight: '600',
-  },
-  tableMeta: {
-    color: theme.colors.textMuted,
-    fontSize: theme.type.caption.fontSize,
-    lineHeight: theme.type.caption.lineHeight,
+  primaryButtonMeta: {
+    color: "#DDE9FF",
+    fontSize: 13,
+    lineHeight: 18,
     marginTop: 2,
   },
-  tableCell: {
-    width: 64,
-    textAlign: 'right',
-    color: theme.colors.textPrimary,
-    fontSize: theme.type.bodyMedium.fontSize,
-    lineHeight: theme.type.bodyMedium.lineHeight,
-    fontWeight: '500',
+  metricStrip: {
+    backgroundColor: palette.surface,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: palette.border,
+    flexDirection: "row",
+    overflow: "hidden",
   },
-  lowerGrid: {
-    gap: theme.spacing.lg,
+  stripItem: {
+    flex: 1,
+    padding: 12,
+    borderRightWidth: 1,
+    borderRightColor: palette.border,
   },
-  lowerGridDesktop: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  listRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: theme.spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    gap: theme.spacing.md,
-  },
-  listTitle: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.type.bodyMedium.fontSize,
-    lineHeight: theme.type.bodyMedium.lineHeight,
-    fontWeight: '600',
-  },
-  listMeta: {
-    color: theme.colors.textMuted,
-    fontSize: theme.type.bodySmall.fontSize,
-    lineHeight: theme.type.bodySmall.lineHeight,
-    marginTop: 2,
-  },
-  listValue: {
-    color: theme.colors.primary,
-    fontSize: theme.type.bodySmall.fontSize,
-    lineHeight: theme.type.bodySmall.lineHeight,
-    fontWeight: '600',
-    textAlign: 'right',
-  },
-  feedItem: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-    paddingVertical: theme.spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-  },
-  feedDot: {
-    width: 10,
-    height: 10,
+  smallDot: {
+    width: 9,
+    height: 9,
     borderRadius: 5,
-    backgroundColor: theme.colors.secondary,
+    marginBottom: 6,
+  },
+  stripLabel: {
+    color: palette.textMuted,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
+  },
+  stripValue: {
+    color: palette.text,
+    fontSize: 17,
+    lineHeight: 23,
+    fontWeight: "800",
+    marginTop: 2,
+  },
+  stripHelper: {
+    color: palette.textSubtle,
+    fontSize: 11,
+    lineHeight: 15,
+    marginTop: 1,
+  },
+  sectionTitle: {
+    color: palette.text,
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: "700",
+  },
+  sectionSubtitle: {
+    color: palette.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 4,
+  },
+  zoneList: {
+    marginTop: 12,
+    gap: 12,
+  },
+  zoneRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  zoneLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    flex: 1,
+  },
+  statusBar: {
+    width: 4,
+    height: 36,
+    borderRadius: 2,
+  },
+  zoneName: {
+    color: palette.text,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "700",
+  },
+  zoneArea: {
+    color: palette.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  zoneDensity: {
+    color: palette.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  actionCard: {
+    borderLeftWidth: 5,
+    borderLeftColor: palette.inactive,
+  },
+  primaryActionCard: {
+    borderColor: palette.primary,
+    borderLeftWidth: 5,
+    borderLeftColor: palette.primary,
+  },
+  actionTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  actionCopy: {
+    flex: 1,
+  },
+  actionOwner: {
+    color: palette.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
+  },
+  actionTitle: {
+    color: palette.text,
+    fontSize: 19,
+    lineHeight: 25,
+    fontWeight: "800",
+    marginTop: 3,
+  },
+  actionTarget: {
+    color: palette.primary,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "700",
+    marginTop: 2,
+  },
+  actionNote: {
+    color: palette.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
     marginTop: 6,
   },
-  feedContent: {
-    flex: 1,
+  primaryTag: {
+    color: palette.primary,
+    backgroundColor: palette.primarySoft,
+    borderRadius: 999,
+    overflow: "hidden",
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "800",
   },
-  feedTitle: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.type.bodyMedium.fontSize,
-    lineHeight: theme.type.bodyMedium.lineHeight,
-  },
-  feedTime: {
-    color: theme.colors.textMuted,
-    fontSize: theme.type.caption.fontSize,
-    lineHeight: theme.type.caption.lineHeight,
-    marginTop: theme.spacing.xs,
-  },
-  inputLabel: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.type.bodySmall.fontSize,
-    lineHeight: theme.type.bodySmall.lineHeight,
-    fontWeight: '500',
-    marginTop: theme.spacing.sm,
-    marginBottom: theme.spacing.xs,
-  },
-  segmentedControl: {
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.large,
-    padding: theme.spacing.xs,
-    gap: theme.spacing.xs,
-    marginBottom: theme.spacing.xs,
-  },
-  segment: {
-    paddingHorizontal: 14,
+  dispatchButton: {
+    backgroundColor: palette.primary,
+    borderRadius: 8,
     paddingVertical: 12,
-    borderRadius: theme.radius.medium,
+    alignItems: "center",
+    marginTop: 16,
   },
-  segmentActive: {
-    backgroundColor: theme.colors.surface,
-    ...theme.shadow.light,
+  dispatchText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "800",
   },
-  segmentText: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.type.bodyMedium.fontSize,
-    lineHeight: theme.type.bodyMedium.lineHeight,
-    fontWeight: '500',
-  },
-  segmentTextActive: {
-    color: theme.colors.primary,
-    fontWeight: '600',
-  },
-  input: {
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.border,
+  secondaryButton: {
+    backgroundColor: palette.surfaceMuted,
+    borderRadius: 8,
     borderWidth: 1,
-    borderRadius: theme.radius.medium,
-    paddingHorizontal: 14,
+    borderColor: palette.border,
     paddingVertical: 12,
-    fontSize: theme.type.bodyMedium.fontSize,
-    lineHeight: theme.type.bodyMedium.lineHeight,
-    color: theme.colors.textPrimary,
+    alignItems: "center",
+    marginTop: 16,
   },
-  inputMultiline: {
-    minHeight: 108,
-    textAlignVertical: 'top',
+  secondaryText: {
+    color: palette.text,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "700",
   },
-  formActions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.lg,
+  metricRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: palette.border,
+    gap: 12,
   },
-  buttonBase: {
-    minHeight: 44,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: theme.radius.medium,
-    alignItems: 'center',
-    justifyContent: 'center',
+  metricLabelWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
-  buttonPrimary: {
-    backgroundColor: theme.colors.primary,
-    ...theme.shadow.light,
+  metricRowLabel: {
+    color: palette.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "700",
   },
-  buttonSecondary: {
-    backgroundColor: theme.colors.tint,
+  metricRowValue: {
+    color: palette.text,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "800",
   },
-  buttonGhost: {
-    backgroundColor: 'transparent',
+  warningLabel: {
+    color: palette.warning,
+    backgroundColor: palette.warningSoft,
+    borderRadius: 999,
+    overflow: "hidden",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "800",
   },
-  buttonHover: {
-    opacity: 0.94,
-  },
-  buttonTextBase: {
-    fontSize: theme.type.button.fontSize,
-    lineHeight: theme.type.button.lineHeight,
-    fontWeight: theme.type.button.fontWeight,
-    letterSpacing: theme.type.button.letterSpacing,
-  },
-  buttonPrimaryText: {
-    color: theme.colors.surface,
-  },
-  buttonSecondaryText: {
-    color: theme.colors.primary,
-  },
-  buttonGhostText: {
-    color: theme.colors.primary,
-  },
-  pressed: {
-    transform: [{ scale: 0.97 }],
-  },
-  pill: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.tint,
-  },
-  pillPositive: {
-    backgroundColor: 'rgba(255,255,255,0.14)',
-  },
-  pillText: {
-    color: theme.colors.primary,
-    fontSize: theme.type.caption.fontSize,
-    lineHeight: theme.type.caption.lineHeight,
-    fontWeight: '600',
-  },
-  pillTextPositive: {
-    color: theme.colors.surface,
-  },
-  snapshotTitle: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.type.h3.fontSize,
-    lineHeight: theme.type.h3.lineHeight,
-    fontWeight: theme.type.h3.fontWeight,
-    marginBottom: theme.spacing.md,
-  },
-  miniBarsWrap: {
-    height: 128,
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.large,
-    padding: theme.spacing.md,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: theme.spacing.xs,
-  },
-  miniBarTrack: {
-    flex: 1,
-    height: '100%',
-    borderRadius: theme.radius.medium,
-    backgroundColor: '#ECF1EF',
-    justifyContent: 'flex-end',
-    overflow: 'hidden',
-  },
-  miniBarFill: {
-    width: '100%',
-    borderRadius: theme.radius.medium,
-    backgroundColor: theme.colors.primary,
-  },
-  snapshotList: {
-    marginTop: theme.spacing.md,
-  },
-  snapshotRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: theme.spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-  },
-  snapshotRowLabel: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.type.bodyMedium.fontSize,
-    lineHeight: theme.type.bodyMedium.lineHeight,
-  },
-  snapshotRowValue: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.type.bodySmall.fontSize,
-    lineHeight: theme.type.bodySmall.lineHeight,
-    fontWeight: '600',
-  },
-  chartWrap: {
-    height: 240,
-    borderRadius: theme.radius.large,
-    backgroundColor: theme.colors.background,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    overflow: 'hidden',
-    marginTop: theme.spacing.sm,
-  },
-  chartGrid: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'space-evenly',
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-  },
-  chartLine: {
-    height: 1,
-    backgroundColor: theme.colors.border,
-  },
-  chartColumns: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: theme.spacing.sm,
-  },
-  chartColumn: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  chartBarPair: {
-    width: '100%',
+  chart: {
     height: 170,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    gap: 6,
+    backgroundColor: "#FBFCFE",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: palette.border,
+    marginTop: 14,
+    padding: 12,
+    position: "relative",
   },
-  chartBarPrimary: {
-    width: 18,
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.medium,
+  thresholdLine: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    bottom: "47%",
+    height: 1,
+    backgroundColor: palette.warning,
   },
-  chartBarSecondary: {
-    width: 18,
-    backgroundColor: '#BDEAD6',
-    borderRadius: theme.radius.medium,
+  thresholdText: {
+    position: "absolute",
+    right: 14,
+    bottom: "48%",
+    color: palette.warning,
+    fontSize: 11,
+    lineHeight: 14,
+    backgroundColor: "#FBFCFE",
+    paddingHorizontal: 4,
+  },
+  chartPoint: {
+    position: "absolute",
+    width: 11,
+    height: 11,
+    borderRadius: 6,
+    marginLeft: -5,
+  },
+  chartLabels: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    bottom: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   chartLabel: {
-    marginTop: theme.spacing.sm,
-    color: theme.colors.textMuted,
-    fontSize: theme.type.caption.fontSize,
-    lineHeight: theme.type.caption.lineHeight,
+    color: palette.textSubtle,
+    fontSize: 11,
+    lineHeight: 14,
   },
-  inlineMetrics: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.md,
+  statusPill: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
   },
-  inlineMetric: {
-    minWidth: 92,
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.medium,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
-  inlineMetricValue: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.type.bodyLarge.fontSize,
-    lineHeight: theme.type.bodyLarge.lineHeight,
-    fontWeight: '700',
+  statusText: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "800",
   },
-  inlineMetricLabel: {
-    color: theme.colors.textMuted,
-    fontSize: theme.type.caption.fontSize,
-    lineHeight: theme.type.caption.lineHeight,
-    marginTop: 2,
+  bottomNav: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 72,
+    backgroundColor: palette.surface,
+    borderTopWidth: 1,
+    borderTopColor: palette.border,
+    flexDirection: "row",
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    gap: 8,
+  },
+  navItem: {
+    flex: 1,
+    height: 48,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  navItemActive: {
+    backgroundColor: palette.primarySoft,
+  },
+  navLabel: {
+    color: palette.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "700",
+  },
+  navLabelActive: {
+    color: palette.primary,
   },
 });
-
-export default App;
