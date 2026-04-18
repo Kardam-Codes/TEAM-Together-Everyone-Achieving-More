@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
-  ImageBackground,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -10,1471 +9,814 @@ import {
   View,
 } from "react-native";
 
-const colors = {
-  bg: "#0F1115",
-  surface: "#1A1D23",
-  surfaceLow: "#111317",
-  surfaceHigh: "#242830",
-  surfaceHighest: "#333539",
-  border: "#30363D",
-  borderSoft: "#2A2F36",
-  text: "#E2E2E8",
-  muted: "#C4C7C8",
-  dim: "#8E9192",
+const palette = {
+  background: "#F4F6F8",
+  surface: "#FFFFFF",
+  surfaceMuted: "#EEF2F5",
+  surfaceDark: "#17202A",
+  text: "#16202A",
+  textMuted: "#5B6773",
+  textSubtle: "#7A8793",
+  border: "#D8DEE5",
   danger: "#C62828",
-  error: "#FFB4AB",
-  errorContainer: "#93000A",
-  primary: "#ACCBDA",
-  primaryContainer: "#4F6D7A",
-  onPrimaryContainer: "#CEEefd",
-  secondary: "#C4C6CE",
-  tertiary: "#EBBD9D",
-  slate900: "#0F172A",
-  slate800: "#1E293B",
-  slate700: "#334155",
-  slate500: "#64748B",
+  dangerSoft: "#FDECEC",
+  warning: "#B26A00",
+  warningSoft: "#FFF4DE",
+  safe: "#1B7F4C",
+  safeSoft: "#EAF7EF",
+  inactive: "#98A2AD",
+  inactiveSoft: "#EDF0F2",
+  primary: "#2457A6",
+  primarySoft: "#E8F0FE",
 };
 
-const mapImage =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAdxz__HebWzrGOLxkN713UV2rq25nXj9BCYFIZ3qTUlqXLdxX4L4x0Mqxot_87kjXl1taTreuSg1dAHYgMmBVe198UfTiAmS4pYTl6rmRKmqiuEZaqOAkdWH2EMUHctAyDnXASMRoofTRtqhu4i_71dCKLCqGcNK8nMgi_yX6fcofzChOxWGotP-fSw0pv3t-PqB-SV6Hv93bx0Ue_Sye2rnm1i_6fxkz7dvIL-6H1euq8uL-gFN2xyJg-piVlrGe_qIAaVHTVFQo";
+const incident = {
+  status: "Danger",
+  statusLevel: "danger",
+  temple: "Somnath Temple",
+  corridor: "Main Entry Gate",
+  sector: "Sector 4",
+  title: "Crowd density rising",
+  predictedRiskIn: "08:00",
+  density: 4.8,
+  safeDensity: 3.5,
+  flowImbalance: "+31 people/min",
+  exitRoutes: "4 open",
+  updatedAt: "04:23 live",
+  reasons: [
+    "Density is above safe limit.",
+    "More people are entering than exiting.",
+    "Walking speed is dropping.",
+  ],
+};
 
-const feedImage =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuCzknyH09bgUcDIG2-GbkMh1M7TbqxwhThlGBHlK-_vxDxfHQcVJB8EzzVgunI-F99glfQs6FCh-Dd-Su-X4t4aF_2snAQtVxqB-RJsNVc4c0jqMhRwN4UAj6wD7ua3yuj8BXjpcniA0XyU5cIMV3--At3Q5BU0EgDJRYuYmFw3lMZmNgJBS15P56SvbGAMty9ajcWOtuCanQShwAQdMIBzTB8NeW-IzdhjJ14K2_-Szuodvwqu0aLNI3wP7rwTwW4EDph--awiNPo";
+const zones = [
+  { label: "Sector 4", area: "Main Entry Gate", status: "danger", density: 4.8 },
+  { label: "Corridor A", area: "North corridor", status: "warning", density: 3.7 },
+  { label: "Queue Lane", area: "Holding area", status: "safe", density: 2.4 },
+];
 
-const heatmapImage =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuBKuNHJGk4vkSXvKMIuvy4QxCSzAyRSQZQ0Rr-b6edAHalGdW7gGQjmhxQz-RI_WjyFEQU6cLtcREGRVDsOF0lNQrJWSr7ke5z7DUGxOhnpSWBKVvvXsM7dm0jmojJKGImBaZM_eNBuO4WiVj66oNBOIbqTwzFZG1y_nWYxDRVSaI1vH6SXhnZ4BECk_L8m7BGxFQ7YQjWK-E6wQUeqbNQil0tlpabrhnKILx8UtXkAst8LnxUwbdi-mC8pF-emIvgwtylIKM65iVg";
+const actions = [
+  {
+    id: "police",
+    title: "Dispatch police unit",
+    target: "Sector 4 / Main Entry Gate",
+    owner: "Police Control",
+    note: "Move crowd-control unit 04 to the entry checkpoint.",
+    primary: true,
+  },
+  {
+    id: "entry",
+    title: "Pause entry",
+    target: "Main Entry Gate",
+    owner: "Temple Authority",
+    note: "Hold incoming visitors for 5 minutes.",
+  },
+  {
+    id: "transport",
+    title: "Hold shuttles",
+    target: "Transport queue",
+    owner: "Transport Control",
+    note: "Delay new arrivals until density drops.",
+  },
+];
+
+const trend = [2.7, 2.9, 3.2, 3.4, 3.8, 4.1, 4.5, 4.8];
 
 export default function App() {
-  const [screen, setScreen] = useState("monitor");
+  const [activeTab, setActiveTab] = useState("alert");
 
   return (
     <SafeAreaView style={styles.app}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
-      {screen === "monitor" && <AlertHome onNavigate={setScreen} />}
-      {screen === "details" && <AlertDetails onNavigate={setScreen} />}
-      {screen === "action" && <ActionScreen onNavigate={setScreen} />}
-      {screen === "metrics" && <MetricsScreen onNavigate={setScreen} />}
+      <StatusBar barStyle="light-content" backgroundColor={palette.surfaceDark} />
+      <Header data={incident} />
+
+      <View style={styles.content}>
+        {activeTab === "alert" ? <AlertScreen data={incident} onActions={() => setActiveTab("actions")} /> : null}
+        {activeTab === "actions" ? <ActionsScreen data={incident} /> : null}
+        {activeTab === "metrics" ? <MetricsScreen data={incident} /> : null}
+      </View>
+
+      <BottomNavigation activeTab={activeTab} onChange={setActiveTab} />
     </SafeAreaView>
   );
 }
 
-function AlertHome({ onNavigate }) {
+function Header({ data }) {
   return (
-    <View style={styles.fullScreen}>
-      <ImageBackground source={{ uri: mapImage }} style={styles.absoluteFill} imageStyle={styles.fadedImage} />
-      <CommandHeader title="Ambaji Corridor A" />
-
-      <View style={styles.alertHomeMain}>
-        <View style={styles.statusCore}>
-          <View style={styles.circleWrap}>
-            <View style={styles.ringGlow} />
-            <View style={styles.dangerCircle}>
-              <Text style={styles.warningIcon}>!</Text>
-              <Text style={styles.dangerText}>DANGER</Text>
-            </View>
-          </View>
-
-          <View style={styles.telemetryBlock}>
-            <Text style={styles.alertTitle}>Crush risk in 8 minutes</Text>
-            <View style={styles.timerBox}>
-              <Text style={styles.timerDanger}>07:54</Text>
-            </View>
-          </View>
-
-          <View style={styles.contextCard}>
-            <Text style={styles.contextIcon}>GW</Text>
-            <View style={styles.flexOne}>
-              <Text style={styles.cardKicker}>Current Density</Text>
-              <Text style={styles.bodyMuted}>4.8 people/m2 - Critical threshold exceeded in Sector 4.</Text>
-            </View>
-          </View>
-        </View>
+    <View style={styles.header}>
+      <View style={styles.headerText}>
+        <Text style={styles.appName}>Stampede Prediction</Text>
+        <Text style={styles.place}>{data.temple}</Text>
+        <Text style={styles.path}>
+          {data.corridor} / {data.sector}
+        </Text>
       </View>
+      <StatusPill level={data.statusLevel} label={data.status} />
+    </View>
+  );
+}
 
-      <View style={styles.homeBottom}>
-        <View style={styles.primaryActionWrap}>
-          <Pressable style={styles.whiteButton} onPress={() => onNavigate("action")}>
-            <Text style={styles.whiteButtonText}>View Response Actions</Text>
-            <Text style={styles.whiteButtonText}>-&gt;</Text>
-          </Pressable>
+function AlertScreen({ data, onActions }) {
+  return (
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={[styles.card, styles.incidentCard]}>
+        {/* Keep the main incident card short: location, issue, timer, reasons, action. */}
+        <View style={styles.rowBetween}>
+          <StatusPill level={data.statusLevel} label={data.status} />
+          <Text style={styles.updatedAt}>{data.updatedAt}</Text>
         </View>
-        <Pressable style={styles.sheetHint} onPress={() => onNavigate("details")}>
-          <View style={styles.dragHandle} />
-          <Text style={styles.sheetHintText}>Swipe for system overview</Text>
+
+        <Text style={styles.incidentTitle}>{data.title}</Text>
+        <Text style={styles.incidentLocation}>
+          {data.corridor}, {data.sector}
+        </Text>
+
+        <View style={styles.timerBox}>
+          <Text style={styles.timerLabel}>Predicted risk in</Text>
+          <Text style={styles.timerValue}>{data.predictedRiskIn}</Text>
+        </View>
+
+        <View style={styles.reasonList}>
+          {data.reasons.map((reason) => (
+            <View key={reason} style={styles.reasonRow}>
+              <View style={styles.reasonDot} />
+              <Text style={styles.reasonText}>{reason}</Text>
+            </View>
+          ))}
+        </View>
+
+        <Pressable style={styles.primaryButton} onPress={onActions}>
+          <Text style={styles.primaryButtonText}>Dispatch police unit</Text>
+          <Text style={styles.primaryButtonMeta}>Sector 4 / Main Entry Gate</Text>
         </Pressable>
-        <BottomNav active="monitor" onNavigate={onNavigate} />
       </View>
+
+      <MetricStrip data={data} />
+      <ZoneStatusList />
+    </ScrollView>
+  );
+}
+
+function MetricStrip({ data }) {
+  const metrics = [
+    { label: "Density", value: `${data.density}`, helper: `safe ${data.safeDensity}`, status: "danger" },
+    { label: "Flow", value: data.flowImbalance, helper: "entry vs exit", status: "warning" },
+    { label: "Exits", value: data.exitRoutes, helper: "available", status: "safe" },
+  ];
+
+  return (
+    <View style={styles.metricStrip}>
+      {metrics.map((metric) => (
+        <View key={metric.label} style={styles.stripItem}>
+          <View style={[styles.smallDot, { backgroundColor: colorForStatus(metric.status) }]} />
+          <Text style={styles.stripLabel}>{metric.label}</Text>
+          <Text style={styles.stripValue}>{metric.value}</Text>
+          <Text style={styles.stripHelper}>{metric.helper}</Text>
+        </View>
+      ))}
     </View>
   );
 }
 
-function AlertDetails({ onNavigate }) {
+function ZoneStatusList() {
   return (
-    <View style={styles.fullScreen}>
-      <View style={styles.dimBackground}>
-        <CommandHeader title="CENTRAL_COMMAND / ACTIVE_ZONE" simple />
-        <View style={styles.feedContent}>
-          <View style={styles.feedCard}>
-            <View style={styles.rowBetween}>
-              <Text style={[styles.cardKicker, styles.errorText]}>Critical Alert</Text>
-              <Text style={styles.labelMuted}>ZONE A-14</Text>
-            </View>
-            <Text style={styles.feedTitle}>Pressure Spike Detected</Text>
-            <ImageBackground source={{ uri: feedImage }} style={styles.feedImage} imageStyle={styles.feedImageStyle} />
-          </View>
-          <View style={styles.twoColumns}>
-            <MetricTile label="Cameras" value="12 ACTIVE" />
-            <MetricTile label="Personnel" value="4 ON-SITE" />
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.overlay} />
-
-      <View style={styles.bottomSheet}>
-        <View style={styles.dragHandleCentered}>
-          <View style={styles.dragHandle} />
-        </View>
-
-        <View style={styles.sheetBody}>
-          <View style={styles.sheetHeader}>
-            <View>
-              <Text style={styles.cardKickerMuted}>Pressure Index</Text>
-              <View style={styles.baselineRow}>
-                <Text style={styles.pressureScore}>88</Text>
-                <Text style={styles.pressureTotal}>/100</Text>
-              </View>
-            </View>
-            <View style={styles.trendBadge}>
-              <Text style={styles.errorText}>UP +12%</Text>
-            </View>
-          </View>
-
-          <View style={styles.twoColumns}>
-            <MetricTile label="Density" value="3.8 people/m2" />
-            <MetricTile label="Flow Rate" value="180 /min" />
-          </View>
-
-          <View style={styles.graphSection}>
-            <View style={styles.rowBetween}>
-              <Text style={styles.cardKicker}>Live Trend</Text>
-              <Text style={styles.labelMuted}>Last 15 minutes</Text>
-            </View>
-            <MiniTrendGraph danger />
-          </View>
-
-          <View style={styles.sheetActions}>
-            <Pressable style={styles.primaryButton}>
-              <Text style={styles.primaryButtonText}>ACKNOWLEDGE</Text>
-            </Pressable>
-            <Pressable style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>DISPATCH</Text>
-            </Pressable>
-          </View>
-        </View>
-
-        <BottomNav active="alerts" onNavigate={onNavigate} />
-      </View>
-    </View>
-  );
-}
-
-function ActionScreen({ onNavigate }) {
-  return (
-    <View style={styles.fullScreen}>
-      <TopAppBar title="Central Station" subtitle="AGENCY RESPONSE" right="LIVE MONITORING" />
-      <ScrollView contentContainerStyle={styles.actionScroll}>
-        <View style={styles.criticalAlert}>
-          <View style={styles.alertSummaryLeft}>
-            <Text style={styles.warningSmall}>!</Text>
-            <View style={styles.flexOne}>
-              <Text style={styles.alertSummaryTitle}>High Pressure Detected</Text>
-              <Text style={styles.alertSummaryBody}>Response required within 90 seconds. System lockdown protocol active.</Text>
-            </View>
-          </View>
-          <View style={styles.alignRight}>
-            <Text style={styles.alertSummaryLabel}>TIME REMAINING</Text>
-            <Text style={styles.alertSummaryTime}>00:74</Text>
-          </View>
-        </View>
-
-        <View style={styles.panelStack}>
-          <ResponsePanel
-            icon="SH"
-            title="Police"
-            body="Crowd control unit 04 in vicinity."
-            status="Awaiting Deployment"
-            button="Deploy Officers"
-            accent={colors.primary}
-          />
-          <ResponsePanel
-            icon="TM"
-            title="Temple Authority"
-            body="Main gate flow: 140 ppm. Capacity exceeded."
-            status="Entry Open"
-            button="Hold Entry / Stop Darshan"
-            accent={colors.tertiary}
-          />
-          <ResponsePanel
-            icon="BS"
-            title="Transport Control"
-            body="Incoming shuttle queue: 12 vehicles."
-            status="Acknowledged - 00:12s"
-            button="Hold Incoming Vehicles"
-            accent={colors.secondary}
-            disabled
-          />
-        </View>
-
-        <View style={styles.bentoRow}>
-          <MetricCard title="CROWD DENSITY" value="8.4" suffix=" p/m2" tone={colors.error} progress={84} />
-          <MetricCard title="EVACUATION ROUTES" value="CLEAR" body="4/4 ACTIVE" tone={colors.primary} />
-          <MetricCard title="COMMUNICATIONS" value="STABLE" body="ENCRYPTED L3" tone={colors.secondary} />
-        </View>
-      </ScrollView>
-
-      <View style={styles.responseLog}>
-        <View style={styles.logLeft}>
-          <Text style={styles.logMuted}>RESPONSE LOG:</Text>
-          <Text style={styles.logText}>POL: <Text style={styles.errorText}>PENDING</Text></Text>
-          <Text style={styles.logText}>TMPL: <Text style={styles.errorText}>PENDING</Text></Text>
-          <Text style={styles.logText}>TRNS: <Text style={styles.primaryText}>OK 12s</Text></Text>
-        </View>
-        <View style={styles.logRight}>
-          <Text style={styles.logTimer}>00:16.42</Text>
-          <Text style={styles.urgentBadge}>URGENT</Text>
-        </View>
-      </View>
-      <MainBottomNav active="action" onNavigate={onNavigate} />
-    </View>
-  );
-}
-
-function MetricsScreen({ onNavigate }) {
-  return (
-    <View style={styles.fullScreen}>
-      <TopAppBar title="Central Station" right="LIVE MONITORING" />
-      <ScrollView contentContainerStyle={styles.metricsScroll}>
-        <View style={styles.metricsHeader}>
-          <Text style={styles.metricsTitle}>System Metrics</Text>
-          <Text style={styles.metricsSubtitle}>REAL-TIME TELEMETRY FEED // STATION SECTOR 7-B</Text>
-        </View>
-
-        <View style={styles.metricsGrid}>
-          <View style={[styles.metricPanel, styles.tallPanel]}>
-            <Text style={styles.panelLabel}>Pressure Index</Text>
-            <View style={styles.baselineRow}>
-              <Text style={styles.bigMetric}>32</Text>
-              <Text style={styles.labelMuted}>PSI / AVG</Text>
-            </View>
-            <View style={styles.nominalBadge}>
-              <View style={styles.squareDot} />
-              <Text style={[styles.panelLabel, { color: colors.tertiary }]}>NOMINAL OPERATING RANGE</Text>
-            </View>
-          </View>
-
-          <View style={styles.metricPanel}>
-            <Text style={styles.panelLabel}>Environmental Dynamics</Text>
-            <View style={styles.metricRows}>
-              <InlineMetric label="Crowd Density" value="4.2" suffix="p/m2" progress={70} />
-              <InlineMetric label="Flow Rate" value="128" suffix="p/min" progress={45} />
-              <InlineMetric label="Corridor Width" value="12.5" suffix="m" progress={100} muted />
-            </View>
-          </View>
-
-          <View style={styles.metricPanel}>
-            <View style={styles.rowBetweenTop}>
+    <View style={styles.card}>
+      <Text style={styles.sectionTitle}>Zone status</Text>
+      <View style={styles.zoneList}>
+        {zones.map((zone) => (
+          <View key={zone.label} style={styles.zoneRow}>
+            <View style={styles.zoneLeft}>
+              <View style={[styles.statusBar, { backgroundColor: colorForStatus(zone.status) }]} />
               <View>
-                <Text style={styles.panelLabel}>Pressure over time</Text>
-                <Text style={styles.risingText}>RISING TREND DETECTED (+14%)</Text>
-              </View>
-              <View style={styles.tagRow}>
-                <Text style={styles.liveTag}>LIVE</Text>
-                <Text style={styles.outlineTag}>24H</Text>
+                <Text style={styles.zoneName}>{zone.label}</Text>
+                <Text style={styles.zoneArea}>{zone.area}</Text>
               </View>
             </View>
-            <LargeTrendGraph />
+            <Text style={styles.zoneDensity}>{zone.density.toFixed(1)} people/m2</Text>
           </View>
-
-          <View style={styles.metricPanel}>
-            <Text style={styles.panelLabel}>Vehicle Arrival Burst</Text>
-            <View style={styles.vehicleRow}>
-              <Text style={styles.vehicleIcon}>TR</Text>
-              <View>
-                <Text style={styles.vehicleMetric}>T-MINUS 04:12</Text>
-                <Text style={styles.labelMuted}>PLATFORM 4 - CAPACITY 88%</Text>
-              </View>
-            </View>
-            <View style={styles.incomingBar}>
-              <View style={styles.incomingFill} />
-              <Text style={styles.incomingText}>INCOMING: SECTOR 7 CARGO EX</Text>
-            </View>
-          </View>
-
-          <ImageBackground source={{ uri: heatmapImage }} style={styles.heatmapCard} imageStyle={styles.heatmapImage}>
-            <View style={styles.heatmapShade}>
-              <Text style={styles.heatmapTitle}>Spatial Heatmap</Text>
-              <Text style={styles.bodyMuted}>Sector 7-B Real-time spatial occupancy visualization.</Text>
-            </View>
-            <Text style={styles.congestionBadge}>CONGESTION ALERT</Text>
-          </ImageBackground>
-        </View>
-      </ScrollView>
-
-      <MainBottomNav active="metrics" onNavigate={onNavigate} />
-    </View>
-  );
-}
-
-function CommandHeader({ title, simple }) {
-  return (
-    <View style={styles.commandHeader}>
-      <View style={styles.headerLeft}>
-        <Text style={styles.headerIcon}>LOC</Text>
-        <Text style={styles.headerTitle}>{title}</Text>
-      </View>
-      <View style={styles.headerRight}>
-        {!simple && <View style={styles.liveDot} />}
-        {!simple && <Text style={styles.liveText}>LIVE MONITORING</Text>}
-        <Text style={styles.headerIcon}>SNS</Text>
-      </View>
-    </View>
-  );
-}
-
-function TopAppBar({ title, subtitle, right }) {
-  return (
-    <View style={styles.topAppBar}>
-      <View style={styles.headerLeft}>
-        <Text style={styles.stationTitle}>{title}</Text>
-        {subtitle ? <View style={styles.verticalRule} /> : null}
-        {subtitle ? <Text style={styles.topSubtitle}>{subtitle}</Text> : null}
-      </View>
-      {right ? (
-        <Pressable style={styles.monitorBadge}>
-          <Text style={styles.monitorBadgeText}>{right}</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
-function BottomNav({ active, onNavigate }) {
-  return (
-    <View style={styles.bottomNav}>
-      <NavItem label="MONITOR" icon="M" active={active === "monitor"} onPress={() => onNavigate("monitor")} />
-      <NavItem label="ALERTS" icon="!" active={active === "alerts"} onPress={() => onNavigate("details")} />
-      <NavItem label="SYSTEM" icon="S" active={false} onPress={() => onNavigate("metrics")} />
-    </View>
-  );
-}
-
-function MainBottomNav({ active, onNavigate }) {
-  return (
-    <View style={styles.mainBottomNav}>
-      <NavItem label="Dashboard" icon="D" active={active === "dashboard"} onPress={() => onNavigate("monitor")} />
-      <NavItem label="Action" icon="!" active={active === "action"} onPress={() => onNavigate("action")} />
-      <NavItem label="Metrics" icon="MT" active={active === "metrics"} onPress={() => onNavigate("metrics")} />
-    </View>
-  );
-}
-
-function NavItem({ label, icon, active, onPress }) {
-  return (
-    <Pressable style={[styles.navItem, active && styles.navItemActive]} onPress={onPress}>
-      <Text style={[styles.navIcon, active && styles.navTextActive]}>{icon}</Text>
-      <Text style={[styles.navLabel, active && styles.navTextActive]}>{label}</Text>
-    </Pressable>
-  );
-}
-
-function MetricTile({ label, value }) {
-  return (
-    <View style={styles.metricTile}>
-      <Text style={styles.labelMutedUpper}>{label}</Text>
-      <Text style={styles.tileValue}>{value}</Text>
-    </View>
-  );
-}
-
-function ResponsePanel({ icon, title, body, status, button, accent, disabled }) {
-  return (
-    <View style={styles.responsePanel}>
-      <View style={styles.panelInfo}>
-        <View style={styles.panelIconBox}>
-          <Text style={[styles.panelIconText, { color: accent }]}>{icon}</Text>
-        </View>
-        <View style={styles.flexOne}>
-          <Text style={[styles.responseTitle, { color: accent }]}>{title}</Text>
-          <Text style={styles.bodyMuted}>{body}</Text>
-          <View style={styles.statusRow}>
-            <View style={[styles.statusDot, { backgroundColor: disabled ? colors.tertiary : colors.error }]} />
-            <Text style={[styles.statusText, { color: disabled ? colors.tertiary : colors.error }]}>{status}</Text>
-          </View>
-        </View>
-      </View>
-      <Pressable style={[styles.deployButton, disabled && styles.deployButtonDisabled]} disabled={disabled}>
-        <Text style={[styles.deployButtonText, disabled && styles.deployButtonTextDisabled]}>{button}</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-function MetricCard({ title, value, suffix, body, tone, progress }) {
-  return (
-    <View style={styles.metricCard}>
-      <Text style={styles.panelLabel}>{title}</Text>
-      <Text style={[styles.metricCardValue, { color: tone }]}>
-        {value}
-        {suffix ? <Text style={styles.metricSuffix}>{suffix}</Text> : null}
-      </Text>
-      {body ? <Text style={[styles.metricBody, { color: tone }]}>{body}</Text> : null}
-      {progress ? (
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${progress}%`, backgroundColor: tone }]} />
-        </View>
-      ) : null}
-    </View>
-  );
-}
-
-function InlineMetric({ label, value, suffix, progress, muted }) {
-  return (
-    <View style={styles.inlineMetric}>
-      <Text style={styles.inlineMetricLabel}>{label}</Text>
-      <Text style={styles.inlineMetricValue}>
-        {value} <Text style={styles.metricSuffix}>{suffix}</Text>
-      </Text>
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${progress}%`, backgroundColor: muted ? colors.slate500 : colors.primary }]} />
-      </View>
-    </View>
-  );
-}
-
-function MiniTrendGraph({ danger }) {
-  return (
-    <View style={styles.miniGraph}>
-      <View style={[styles.graphGrid, { top: 28 }]} />
-      <View style={[styles.graphGrid, { top: 64 }]} />
-      <View style={[styles.graphGrid, { top: 100 }]} />
-      <View style={[styles.graphSegment, styles.segmentA, danger && styles.graphDanger]} />
-      <View style={[styles.graphSegment, styles.segmentB, danger && styles.graphDanger]} />
-      <View style={[styles.graphSegment, styles.segmentC, danger && styles.graphDanger]} />
-      <View style={[styles.graphSegment, styles.segmentD, danger && styles.graphDanger]} />
-      <View style={styles.currentPoint} />
-    </View>
-  );
-}
-
-function LargeTrendGraph() {
-  return (
-    <View style={styles.largeGraph}>
-      <View style={[styles.graphGrid, { top: 52 }]} />
-      <View style={[styles.graphGrid, { top: 104 }]} />
-      <View style={[styles.graphGrid, { top: 156 }]} />
-      <View style={[styles.largeSegment, styles.largeSegA]} />
-      <View style={[styles.largeSegment, styles.largeSegB]} />
-      <View style={[styles.largeSegment, styles.largeSegC]} />
-      <View style={[styles.largeSegment, styles.largeSegD]} />
-      <View style={[styles.largePoint, { right: 48, top: 38 }]} />
-      <View style={[styles.largePoint, { right: 6, top: 28 }]} />
-      <View style={styles.axisLabels}>
-        {["06:00", "12:00", "18:00", "00:00", "NOW"].map((label) => (
-          <Text key={label} style={styles.axisLabel}>{label}</Text>
         ))}
       </View>
     </View>
   );
 }
 
-const type = {
-  label: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "700",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-  },
-  body: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "400",
-  },
-};
+function ActionsScreen({ data }) {
+  return (
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Actions for {data.sector}</Text>
+        <Text style={styles.sectionSubtitle}>
+          {data.status}: {data.title.toLowerCase()} at {data.corridor}.
+        </Text>
+      </View>
+
+      {actions.map((action) => (
+        <ActionCard key={action.id} action={action} />
+      ))}
+    </ScrollView>
+  );
+}
+
+function ActionCard({ action }) {
+  return (
+    <View style={[styles.card, action.primary ? styles.primaryActionCard : styles.actionCard]}>
+      <View style={styles.actionTop}>
+        <View style={styles.actionCopy}>
+          <Text style={styles.actionOwner}>{action.owner}</Text>
+          <Text style={styles.actionTitle}>{action.title}</Text>
+          <Text style={styles.actionTarget}>{action.target}</Text>
+          <Text style={styles.actionNote}>{action.note}</Text>
+        </View>
+        {action.primary ? <Text style={styles.primaryTag}>Primary</Text> : null}
+      </View>
+
+      <Pressable style={action.primary ? styles.dispatchButton : styles.secondaryButton}>
+        <Text style={action.primary ? styles.dispatchText : styles.secondaryText}>
+          {action.primary ? "Dispatch now" : "Send instruction"}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function MetricsScreen({ data }) {
+  return (
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Key metrics</Text>
+        <MetricRow label="Crowd density" value={`${data.density} people/m2`} status="danger" />
+        <MetricRow label="Safe density" value={`${data.safeDensity} people/m2`} status="inactive" />
+        <MetricRow label="Flow imbalance" value={data.flowImbalance} status="warning" />
+        <MetricRow label="Exit routes" value={data.exitRoutes} status="safe" />
+      </View>
+
+      <View style={styles.card}>
+        <View style={styles.rowBetween}>
+          <View>
+            <Text style={styles.sectionTitle}>Density trend</Text>
+            <Text style={styles.sectionSubtitle}>Last 8 minutes</Text>
+          </View>
+          <Text style={styles.warningLabel}>Rising</Text>
+        </View>
+        <LineChart values={trend} dangerAt={data.safeDensity} />
+      </View>
+    </ScrollView>
+  );
+}
+
+function MetricRow({ label, value, status }) {
+  return (
+    <View style={styles.metricRow}>
+      <View style={styles.metricLabelWrap}>
+        <View style={[styles.smallDot, { backgroundColor: colorForStatus(status) }]} />
+        <Text style={styles.metricRowLabel}>{label}</Text>
+      </View>
+      <Text style={styles.metricRowValue}>{value}</Text>
+    </View>
+  );
+}
+
+function LineChart({ values, dangerAt }) {
+  const points = useMemo(() => {
+    const min = Math.min(...values, 0);
+    const max = Math.max(...values, dangerAt);
+    const range = max - min || 1;
+
+    return values.map((value, index) => ({
+      left: `${(index / (values.length - 1)) * 100}%`,
+      bottom: `${((value - min) / range) * 76 + 10}%`,
+      danger: value >= dangerAt,
+      value,
+    }));
+  }, [dangerAt, values]);
+
+  return (
+    <View style={styles.chart}>
+      <View style={styles.thresholdLine} />
+      <Text style={styles.thresholdText}>safe limit</Text>
+      {points.map((point, index) => (
+        <View
+          key={`${point.value}-${index}`}
+          style={[
+            styles.chartPoint,
+            {
+              left: point.left,
+              bottom: point.bottom,
+              backgroundColor: point.danger ? palette.danger : palette.primary,
+            },
+          ]}
+        />
+      ))}
+      <View style={styles.chartLabels}>
+        <Text style={styles.chartLabel}>-8 min</Text>
+        <Text style={styles.chartLabel}>now</Text>
+      </View>
+    </View>
+  );
+}
+
+function StatusPill({ level, label }) {
+  return (
+    <View style={[styles.statusPill, { backgroundColor: softColorForStatus(level), borderColor: colorForStatus(level) }]}>
+      <View style={[styles.statusDot, { backgroundColor: colorForStatus(level) }]} />
+      <Text style={[styles.statusText, { color: colorForStatus(level) }]}>{label}</Text>
+    </View>
+  );
+}
+
+function BottomNavigation({ activeTab, onChange }) {
+  const tabs = [
+    { id: "alert", label: "Alert" },
+    { id: "actions", label: "Actions" },
+    { id: "metrics", label: "Metrics" },
+  ];
+
+  return (
+    <View style={styles.bottomNav}>
+      {tabs.map((tab) => (
+        <Pressable
+          key={tab.id}
+          onPress={() => onChange(tab.id)}
+          style={[styles.navItem, activeTab === tab.id && styles.navItemActive]}
+        >
+          <Text style={[styles.navLabel, activeTab === tab.id && styles.navLabelActive]}>{tab.label}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+function colorForStatus(status) {
+  if (status === "danger") {
+    return palette.danger;
+  }
+  if (status === "warning") {
+    return palette.warning;
+  }
+  if (status === "safe") {
+    return palette.safe;
+  }
+  return palette.inactive;
+}
+
+function softColorForStatus(status) {
+  if (status === "danger") {
+    return palette.dangerSoft;
+  }
+  if (status === "warning") {
+    return palette.warningSoft;
+  }
+  if (status === "safe") {
+    return palette.safeSoft;
+  }
+  return palette.inactiveSoft;
+}
 
 const styles = StyleSheet.create({
   app: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: palette.background,
   },
-  fullScreen: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  absoluteFill: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  fadedImage: {
-    opacity: 0.1,
-  },
-  commandHeader: {
-    height: 56,
-    paddingHorizontal: 16,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+  header: {
+    backgroundColor: palette.surfaceDark,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    zIndex: 10,
+    gap: 14,
   },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flexShrink: 1,
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  headerIcon: {
-    color: "#FFFFFF",
-    fontSize: 11,
-    fontWeight: "900",
-  },
-  headerTitle: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "800",
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-  },
-  liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.danger,
-  },
-  liveText: {
-    color: "#FFFFFF",
-    fontSize: 10,
-    fontWeight: "900",
-  },
-  alertHomeMain: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 56,
-    paddingBottom: 176,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  statusCore: {
-    width: "100%",
-    alignItems: "center",
-    gap: 32,
-  },
-  circleWrap: {
-    width: 280,
-    height: 280,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ringGlow: {
-    position: "absolute",
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    borderWidth: 4,
-    borderColor: colors.danger,
-    opacity: 0.22,
-  },
-  dangerCircle: {
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    borderWidth: 12,
-    borderColor: colors.danger,
-    backgroundColor: colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.45,
-    shadowRadius: 20,
-    elevation: 12,
-  },
-  warningIcon: {
-    color: colors.danger,
-    fontSize: 52,
-    fontWeight: "900",
-    lineHeight: 58,
-  },
-  dangerText: {
-    color: "#FFFFFF",
-    fontSize: 48,
-    lineHeight: 54,
-    fontWeight: "800",
-  },
-  telemetryBlock: {
-    alignItems: "center",
-    gap: 8,
-  },
-  alertTitle: {
-    color: "#FFFFFF",
-    fontSize: 24,
-    lineHeight: 29,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    textAlign: "center",
-  },
-  timerBox: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: 24,
-    paddingVertical: 8,
-  },
-  timerDanger: {
-    color: colors.danger,
-    fontSize: 48,
-    lineHeight: 54,
-    fontWeight: "800",
-    fontVariant: ["tabular-nums"],
-  },
-  contextCard: {
-    width: "100%",
-    maxWidth: 384,
-    backgroundColor: colors.surface,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.danger,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 16,
-  },
-  contextIcon: {
-    color: colors.muted,
-    fontWeight: "800",
-  },
-  flexOne: {
+  headerText: {
     flex: 1,
   },
-  cardKicker: {
-    ...type.label,
-    color: "#FFFFFF",
-  },
-  cardKickerMuted: {
-    ...type.label,
-    color: colors.muted,
-    marginBottom: 4,
-  },
-  bodyMuted: {
-    ...type.body,
-    color: colors.muted,
-  },
-  homeBottom: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 20,
-  },
-  primaryActionWrap: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
-  },
-  whiteButton: {
-    height: 48,
-    backgroundColor: "#FFFFFF",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.45,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  whiteButtonText: {
-    color: colors.bg,
-    fontSize: 20,
-    lineHeight: 24,
-    fontWeight: "800",
-    textTransform: "uppercase",
-  },
-  sheetHint: {
-    height: 48,
-    backgroundColor: colors.surfaceHigh,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-    alignItems: "center",
-    paddingTop: 4,
-  },
-  dragHandle: {
-    width: 48,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    marginBottom: 8,
-  },
-  sheetHintText: {
-    color: "#94A3B8",
+  appName: {
+    color: "#AEB8C2",
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "600",
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
   },
-  bottomNav: {
-    height: 64,
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    flexDirection: "row",
-    alignItems: "stretch",
-    justifyContent: "space-around",
-  },
-  mainBottomNav: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 80,
-    paddingHorizontal: 8,
-    backgroundColor: "#0F172A",
-    borderTopWidth: 1,
-    borderTopColor: "#1E293B",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-  },
-  navItem: {
-    minWidth: 90,
-    paddingHorizontal: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  navItemActive: {
-    backgroundColor: colors.surfaceHigh,
-    borderTopWidth: 4,
-    borderTopColor: "#FFFFFF",
-  },
-  navIcon: {
-    color: colors.slate500,
-    fontSize: 16,
-    fontWeight: "900",
-    marginBottom: 4,
-  },
-  navLabel: {
-    color: colors.slate500,
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
-  },
-  navTextActive: {
+  place: {
     color: "#FFFFFF",
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: "700",
+    marginTop: 3,
   },
-  dimBackground: {
+  path: {
+    color: "#D5DCE3",
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 2,
+  },
+  content: {
     flex: 1,
-    opacity: 0.45,
   },
-  feedContent: {
-    paddingTop: 24,
-    paddingHorizontal: 16,
-    gap: 16,
-  },
-  feedCard: {
-    backgroundColor: colors.surface,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.error,
+  scrollContent: {
     padding: 16,
-    gap: 8,
+    paddingBottom: 96,
+    gap: 14,
+  },
+  card: {
+    backgroundColor: palette.surface,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: palette.border,
+    padding: 16,
+  },
+  incidentCard: {
+    borderLeftWidth: 5,
+    borderLeftColor: palette.danger,
+    gap: 14,
   },
   rowBetween: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 12,
   },
-  rowBetweenTop: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 16,
-  },
-  errorText: {
-    color: colors.error,
-  },
-  primaryText: {
-    color: colors.primary,
-  },
-  labelMuted: {
-    color: colors.muted,
+  updatedAt: {
+    color: palette.textSubtle,
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: "600",
   },
-  labelMutedUpper: {
-    color: colors.muted,
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    marginBottom: 4,
-  },
-  feedTitle: {
-    color: "#FFFFFF",
-    fontSize: 24,
-    lineHeight: 29,
-    fontWeight: "700",
-  },
-  feedImage: {
-    height: 96,
-    backgroundColor: colors.surfaceLow,
-    overflow: "hidden",
-  },
-  feedImageStyle: {
-    opacity: 0.35,
-  },
-  twoColumns: {
-    flexDirection: "row",
-    gap: 16,
-  },
-  metricTile: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 16,
-  },
-  tileValue: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    lineHeight: 24,
-    fontWeight: "700",
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.6)",
-  },
-  bottomSheet: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    shadowColor: "#000",
-    shadowOpacity: 0.5,
-    shadowRadius: 24,
-    elevation: 16,
-  },
-  dragHandleCentered: {
-    alignItems: "center",
-    paddingTop: 8,
-    paddingBottom: 4,
-  },
-  sheetBody: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 24,
-    gap: 24,
-  },
-  sheetHeader: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-  },
-  baselineRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: 4,
-  },
-  pressureScore: {
-    color: colors.error,
-    fontSize: 48,
-    lineHeight: 54,
+  incidentTitle: {
+    color: palette.text,
+    fontSize: 25,
+    lineHeight: 31,
     fontWeight: "800",
   },
-  pressureTotal: {
-    color: colors.muted,
-    fontSize: 24,
-    lineHeight: 29,
+  incidentLocation: {
+    color: palette.textMuted,
+    fontSize: 15,
+    lineHeight: 21,
+  },
+  timerBox: {
+    backgroundColor: palette.dangerSoft,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#F4C9C9",
+    padding: 14,
+  },
+  timerLabel: {
+    color: palette.danger,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: "700",
   },
-  trendBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    backgroundColor: "rgba(255,180,171,0.1)",
-    borderWidth: 1,
-    borderColor: "rgba(255,180,171,0.2)",
+  timerValue: {
+    color: palette.danger,
+    fontSize: 42,
+    lineHeight: 48,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
   },
-  graphSection: {
+  reasonList: {
     gap: 8,
   },
-  miniGraph: {
-    height: 128,
-    backgroundColor: colors.surfaceLow,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: "hidden",
-  },
-  graphGrid: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: colors.border,
-    opacity: 0.85,
-  },
-  graphSegment: {
-    position: "absolute",
-    height: 2,
-    backgroundColor: colors.primary,
-  },
-  graphDanger: {
-    backgroundColor: colors.error,
-  },
-  segmentA: {
-    left: 6,
-    top: 100,
-    width: 90,
-    transform: [{ rotate: "-8deg" }],
-  },
-  segmentB: {
-    left: 86,
-    top: 84,
-    width: 92,
-    transform: [{ rotate: "-18deg" }],
-  },
-  segmentC: {
-    right: 74,
-    top: 52,
-    width: 88,
-    transform: [{ rotate: "-28deg" }],
-  },
-  segmentD: {
-    right: 0,
-    top: 25,
-    width: 82,
-    transform: [{ rotate: "-12deg" }],
-  },
-  currentPoint: {
-    position: "absolute",
-    right: -2,
-    top: 15,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.error,
-  },
-  sheetActions: {
+  reasonRow: {
     flexDirection: "row",
-    gap: 16,
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  reasonDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: palette.danger,
+    marginTop: 7,
+  },
+  reasonText: {
+    flex: 1,
+    color: palette.text,
+    fontSize: 15,
+    lineHeight: 22,
   },
   primaryButton: {
-    flex: 1,
-    height: 48,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: palette.primary,
+    borderRadius: 8,
+    padding: 15,
   },
   primaryButtonText: {
-    ...type.label,
-    color: "#2F3131",
-  },
-  secondaryButton: {
-    flex: 1,
-    height: 48,
-    backgroundColor: "#464950",
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  secondaryButtonText: {
-    ...type.label,
     color: "#FFFFFF",
-  },
-  topAppBar: {
-    height: 64,
-    paddingHorizontal: 24,
-    backgroundColor: colors.slate900,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.slate800,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  stationTitle: {
-    color: "#F1F5F9",
-    fontSize: 18,
-    fontWeight: "900",
-    textTransform: "uppercase",
-  },
-  verticalRule: {
-    width: 1,
-    height: 16,
-    backgroundColor: colors.slate700,
-    marginHorizontal: 8,
-  },
-  topSubtitle: {
-    color: "#94A3B8",
-    fontSize: 12,
+    fontSize: 17,
+    lineHeight: 23,
     fontWeight: "800",
-    textTransform: "uppercase",
   },
-  monitorBadge: {
-    backgroundColor: colors.primaryContainer,
+  primaryButtonMeta: {
+    color: "#DDE9FF",
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 2,
+  },
+  metricStrip: {
+    backgroundColor: palette.surface,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.slate700,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  monitorBadgeText: {
-    color: colors.onPrimaryContainer,
-    fontSize: 11,
-    fontWeight: "800",
-  },
-  actionScroll: {
-    padding: 24,
-    paddingBottom: 176,
-    gap: 24,
-  },
-  criticalAlert: {
-    backgroundColor: colors.errorContainer,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.danger,
-    padding: 16,
+    borderColor: palette.border,
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 16,
+    overflow: "hidden",
   },
-  alertSummaryLeft: {
+  stripItem: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
+    padding: 12,
+    borderRightWidth: 1,
+    borderRightColor: palette.border,
   },
-  warningSmall: {
-    color: "#FFDAD6",
-    fontSize: 24,
-    fontWeight: "900",
+  smallDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    marginBottom: 6,
   },
-  alertSummaryTitle: {
-    color: "#FFDAD6",
+  stripLabel: {
+    color: palette.textMuted,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
+  },
+  stripValue: {
+    color: palette.text,
+    fontSize: 17,
+    lineHeight: 23,
+    fontWeight: "800",
+    marginTop: 2,
+  },
+  stripHelper: {
+    color: palette.textSubtle,
+    fontSize: 11,
+    lineHeight: 15,
+    marginTop: 1,
+  },
+  sectionTitle: {
+    color: palette.text,
     fontSize: 18,
     lineHeight: 24,
     fontWeight: "700",
-    textTransform: "uppercase",
   },
-  alertSummaryBody: {
-    color: "#FFDAD6",
-    opacity: 0.9,
+  sectionSubtitle: {
+    color: palette.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 4,
+  },
+  zoneList: {
+    marginTop: 12,
+    gap: 12,
+  },
+  zoneRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  zoneLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    flex: 1,
+  },
+  statusBar: {
+    width: 4,
+    height: 36,
+    borderRadius: 2,
+  },
+  zoneName: {
+    color: palette.text,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "700",
+  },
+  zoneArea: {
+    color: palette.textMuted,
     fontSize: 13,
     lineHeight: 18,
   },
-  alignRight: {
-    alignItems: "flex-end",
+  zoneDensity: {
+    color: palette.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
   },
-  alertSummaryLabel: {
-    ...type.label,
-    color: "#FFDAD6",
+  actionCard: {
+    borderLeftWidth: 5,
+    borderLeftColor: palette.inactive,
   },
-  alertSummaryTime: {
-    color: "#FFDAD6",
-    fontSize: 28,
-    lineHeight: 32,
-    fontWeight: "800",
+  primaryActionCard: {
+    borderColor: palette.primary,
+    borderLeftWidth: 5,
+    borderLeftColor: palette.primary,
   },
-  panelStack: {
-    gap: 16,
-  },
-  responsePanel: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    padding: 16,
-    gap: 16,
-  },
-  panelInfo: {
+  actionTop: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 16,
+    justifyContent: "space-between",
+    gap: 12,
   },
-  panelIconBox: {
-    backgroundColor: colors.surfaceHighest,
-    padding: 8,
-    minWidth: 40,
-    alignItems: "center",
+  actionCopy: {
+    flex: 1,
   },
-  panelIconText: {
-    fontWeight: "900",
+  actionOwner: {
+    color: palette.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
   },
-  responseTitle: {
-    fontSize: 16,
+  actionTitle: {
+    color: palette.text,
+    fontSize: 19,
+    lineHeight: 25,
+    fontWeight: "800",
+    marginTop: 3,
+  },
+  actionTarget: {
+    color: palette.primary,
+    fontSize: 14,
     lineHeight: 20,
     fontWeight: "700",
-    textTransform: "uppercase",
+    marginTop: 2,
   },
-  statusRow: {
-    marginTop: 4,
+  actionNote: {
+    color: palette.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 6,
+  },
+  primaryTag: {
+    color: palette.primary,
+    backgroundColor: palette.primarySoft,
+    borderRadius: 999,
+    overflow: "hidden",
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "800",
+  },
+  dispatchButton: {
+    backgroundColor: palette.primary,
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 16,
+  },
+  dispatchText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "800",
+  },
+  secondaryButton: {
+    backgroundColor: palette.surfaceMuted,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: palette.border,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 16,
+  },
+  secondaryText: {
+    color: palette.text,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "700",
+  },
+  metricRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: palette.border,
+    gap: 12,
+  },
+  metricLabelWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  metricRowLabel: {
+    color: palette.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "700",
+  },
+  metricRowValue: {
+    color: palette.text,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "800",
+  },
+  warningLabel: {
+    color: palette.warning,
+    backgroundColor: palette.warningSoft,
+    borderRadius: 999,
+    overflow: "hidden",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "800",
+  },
+  chart: {
+    height: 170,
+    backgroundColor: "#FBFCFE",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: palette.border,
+    marginTop: 14,
+    padding: 12,
+    position: "relative",
+  },
+  thresholdLine: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    bottom: "47%",
+    height: 1,
+    backgroundColor: palette.warning,
+  },
+  thresholdText: {
+    position: "absolute",
+    right: 14,
+    bottom: "48%",
+    color: palette.warning,
+    fontSize: 11,
+    lineHeight: 14,
+    backgroundColor: "#FBFCFE",
+    paddingHorizontal: 4,
+  },
+  chartPoint: {
+    position: "absolute",
+    width: 11,
+    height: 11,
+    borderRadius: 6,
+    marginLeft: -5,
+  },
+  chartLabels: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    bottom: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  chartLabel: {
+    color: palette.textSubtle,
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  statusPill: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
   },
   statusDot: {
     width: 8,
     height: 8,
+    borderRadius: 4,
   },
   statusText: {
-    ...type.label,
-  },
-  deployButton: {
-    backgroundColor: colors.primaryContainer,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  deployButtonDisabled: {
-    backgroundColor: colors.surfaceHighest,
-    borderWidth: 1,
-    borderColor: colors.dim,
-    opacity: 0.5,
-  },
-  deployButtonText: {
-    ...type.label,
-    color: colors.onPrimaryContainer,
-  },
-  deployButtonTextDisabled: {
-    color: colors.muted,
-  },
-  bentoRow: {
-    gap: 16,
-  },
-  metricCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    padding: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 124,
-  },
-  panelLabel: {
-    ...type.label,
-    color: colors.slate500,
-    marginBottom: 8,
-  },
-  metricCardValue: {
-    fontSize: 36,
-    lineHeight: 40,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "800",
   },
-  metricSuffix: {
-    color: colors.muted,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "400",
-  },
-  metricBody: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "700",
-  },
-  progressTrack: {
-    width: "100%",
-    height: 4,
-    backgroundColor: colors.surfaceHighest,
-    marginTop: 8,
-  },
-  progressFill: {
-    height: "100%",
-  },
-  responseLog: {
+  bottomNav: {
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: 80,
-    backgroundColor: colors.slate900,
-    borderTopWidth: 1,
-    borderTopColor: colors.slate800,
-    paddingHorizontal: 24,
-    paddingVertical: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 16,
-  },
-  logLeft: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  logMuted: {
-    ...type.label,
-    color: colors.slate500,
-  },
-  logText: {
-    color: "#94A3B8",
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  logRight: {
-    alignItems: "flex-end",
-  },
-  logTimer: {
-    color: "#F1F5F9",
-    fontSize: 28,
-    lineHeight: 32,
-    fontWeight: "800",
-    fontVariant: ["tabular-nums"],
-  },
-  urgentBadge: {
-    ...type.label,
-    color: colors.errorContainer,
-    backgroundColor: colors.error,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-  },
-  metricsScroll: {
-    padding: 24,
-    paddingBottom: 112,
-    gap: 32,
-  },
-  metricsHeader: {
-    borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
-    paddingLeft: 16,
-  },
-  metricsTitle: {
-    color: "#94A3B8",
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: "700",
-    letterSpacing: 1.4,
-    textTransform: "uppercase",
-  },
-  metricsSubtitle: {
-    color: colors.slate500,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  metricsGrid: {
-    gap: 24,
-  },
-  metricPanel: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    padding: 24,
-  },
-  tallPanel: {
-    minHeight: 200,
-    justifyContent: "space-between",
-  },
-  bigMetric: {
-    color: colors.primary,
-    fontSize: 48,
-    lineHeight: 54,
-    fontWeight: "800",
-  },
-  nominalBadge: {
-    marginTop: 16,
-    backgroundColor: colors.bg,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    padding: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  squareDot: {
-    width: 12,
-    height: 12,
-    backgroundColor: colors.tertiary,
-  },
-  metricRows: {
-    gap: 24,
-  },
-  inlineMetric: {
-    gap: 8,
-  },
-  inlineMetricLabel: {
-    ...type.label,
-    color: "#CBD5E1",
-  },
-  inlineMetricValue: {
-    color: colors.text,
-    fontSize: 28,
-    lineHeight: 32,
-    fontWeight: "800",
-  },
-  risingText: {
-    color: colors.error,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "800",
-  },
-  tagRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  liveTag: {
-    color: "#94A3B8",
-    backgroundColor: colors.slate800,
-    fontSize: 10,
-    fontWeight: "800",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  outlineTag: {
-    color: colors.slate500,
-    borderWidth: 1,
-    borderColor: colors.slate700,
-    fontSize: 10,
-    fontWeight: "800",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  largeGraph: {
-    height: 256,
-    marginTop: 20,
-    borderLeftWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: colors.borderSoft,
-  },
-  largeSegment: {
-    position: "absolute",
-    height: 3,
-    backgroundColor: colors.primary,
-  },
-  largeSegA: {
-    left: 8,
-    top: 154,
-    width: 92,
-    transform: [{ rotate: "-8deg" }],
-  },
-  largeSegB: {
-    left: 90,
-    top: 136,
-    width: 104,
-    transform: [{ rotate: "-18deg" }],
-  },
-  largeSegC: {
-    right: 112,
-    top: 88,
-    width: 116,
-    transform: [{ rotate: "-22deg" }],
-  },
-  largeSegD: {
-    right: 6,
-    top: 44,
-    width: 116,
-    transform: [{ rotate: "-15deg" }],
-  },
-  largePoint: {
-    position: "absolute",
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.error,
-  },
-  axisLabels: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: -26,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  axisLabel: {
-    color: "#475569",
-    fontSize: 10,
-    fontWeight: "700",
-  },
-  vehicleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-    paddingVertical: 16,
-  },
-  vehicleIcon: {
-    color: colors.primary,
-    fontSize: 28,
-    lineHeight: 32,
-    fontWeight: "900",
-  },
-  vehicleMetric: {
-    color: colors.text,
-    fontSize: 28,
-    lineHeight: 32,
-    fontWeight: "800",
-  },
-  incomingBar: {
-    height: 32,
-    backgroundColor: colors.bg,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  incomingFill: {
-    position: "absolute",
-    left: 0,
-    top: 0,
     bottom: 0,
-    width: "88%",
-    backgroundColor: colors.primaryContainer,
-    opacity: 0.5,
+    height: 72,
+    backgroundColor: palette.surface,
+    borderTopWidth: 1,
+    borderTopColor: palette.border,
+    flexDirection: "row",
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    gap: 8,
   },
-  incomingText: {
-    color: colors.onPrimaryContainer,
-    fontSize: 10,
-    fontWeight: "800",
+  navItem: {
+    flex: 1,
+    height: 48,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  heatmapCard: {
-    minHeight: 240,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    overflow: "hidden",
-    justifyContent: "flex-end",
+  navItemActive: {
+    backgroundColor: palette.primarySoft,
   },
-  heatmapImage: {
-    opacity: 0.35,
-  },
-  heatmapShade: {
-    padding: 24,
-    backgroundColor: "rgba(26,29,35,0.82)",
-  },
-  heatmapTitle: {
-    color: "#F1F5F9",
-    fontSize: 16,
+  navLabel: {
+    color: palette.textMuted,
+    fontSize: 14,
     lineHeight: 20,
     fontWeight: "700",
-    textTransform: "uppercase",
   },
-  congestionBadge: {
-    position: "absolute",
-    top: 24,
-    right: 24,
-    color: "#690005",
-    backgroundColor: colors.error,
-    fontSize: 10,
-    fontWeight: "900",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+  navLabelActive: {
+    color: palette.primary,
   },
 });

@@ -2,3 +2,7 @@ node_modules/
 .env
 .expo/
 dist/
+preview-alert-ui/
+repo_for_ai.txt
+expo-server*.log
+expo-live.log
