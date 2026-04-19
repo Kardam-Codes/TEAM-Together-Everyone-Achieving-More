@@ -2,7 +2,7 @@
 // PURPOSE - App root: providers + navigation for role login and 5-tab experience.
 
 import React, { useEffect } from 'react';
-import { StatusBar } from 'react-native';
+import { StatusBar, Platform, UIManager } from 'react-native';
 
 import * as Notifications from 'expo-notifications';
 
@@ -12,6 +12,10 @@ import { LiveProvider } from './src/context/LiveContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { registerDevice } from './src/api/liveClient';
 import './src/i18n'; // Initialize i18n
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

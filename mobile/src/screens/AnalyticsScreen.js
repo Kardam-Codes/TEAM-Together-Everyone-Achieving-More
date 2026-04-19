@@ -1,7 +1,7 @@
 // OWNER - HEET
 // PURPOSE - Analytics screen: live trends and basic replay controls (v1).
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -77,18 +77,14 @@ export function AnalyticsScreen() {
   const density = selectedCamera?.density;
   const score = selectedCamera?.pressure_score;
 
-  useMemo(() => {
+  useEffect(() => {
     if (typeof density !== 'number') return;
     setSeries(prev => [...prev, density].slice(-30));
   }, [density]);
 
-  const scoreSeries = useMemo(() => {
-    const cameras = live?.cameras || {};
-    const s = cameras?.[tableName]?.pressure_score;
-    return typeof s === 'number' ? s : 0;
-  }, [live, tableName]);
+  const dangerStatus = score > 75 ? 'danger' : score > 55 ? 'warning' : 'safe';
 
-  const dangerStatus = score > 3.5 ? 'danger' : score > 2.5 ? 'warning' : 'safe';
+  const replayBtnStyle = [styles.secondaryButton, { flex: 1, borderWidth: 1, borderColor: palette.border }];
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -117,9 +113,9 @@ export function AnalyticsScreen() {
               </View>
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={[styles.incidentTitle, { fontSize: 20, color: colorForStatus(dangerStatus) }]}>
-                  Score {Math.round(scoreSeries)}
+                  Score {typeof score === 'number' ? Math.round(score) : '--'}
                 </Text>
-                <Text style={styles.sectionSubtitle}>{score > 3.5 ? 'CRITICAL' : score > 2.5 ? 'WARNING' : 'STABLE'}</Text>
+                <Text style={styles.sectionSubtitle}>{score > 75 ? 'CRITICAL' : score > 55 ? 'WARNING' : 'STABLE'}</Text>
               </View>
             </View>
             <LineChart values={series.length ? series : [0, 0, 0, 0]} dangerAt={3.5} />
@@ -163,7 +159,7 @@ export function AnalyticsScreen() {
           <Text style={styles.sectionSubtitle}>Control backend stream (pause/seek/speed).</Text>
 
           <View style={{ marginTop: 14, gap: 10 }}>
-            <Pressable onPress={() => setReplay({ mode: 'REPLAY', paused: false, speed: 1 })} style={styles.primaryButtonNew}>
+            <Pressable onPress={() => setReplay({ mode: 'REPLAY', paused: false, speed: 1 })} style={styles.primaryButton}>
               <Ionicons name="play" size={18} color="#FFFFFF" />
               <Text style={[styles.primaryButtonLabel, { color: '#FFFFFF' }]}>Start Replay</Text>
             </Pressable>
@@ -171,14 +167,14 @@ export function AnalyticsScreen() {
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <Pressable 
                 onPress={() => setReplay({ paused: true })} 
-                style={[styles.secondaryButtonNew, { flex: 1, borderWidth: 1, borderColor: palette.border }]}
+                style={replayBtnStyle}
               >
                 <Ionicons name="pause" size={16} color={palette.text} />
                 <Text style={{ color: palette.text, fontWeight: '700' }}>Pause</Text>
               </Pressable>
               <Pressable 
                 onPress={() => setReplay({ paused: false })} 
-                style={[styles.secondaryButtonNew, { flex: 1, borderWidth: 1, borderColor: palette.border }]}
+                style={replayBtnStyle}
               >
                 <Ionicons name="play" size={16} color={palette.text} />
                 <Text style={{ color: palette.text, fontWeight: '700' }}>Resume</Text>
@@ -186,22 +182,22 @@ export function AnalyticsScreen() {
             </View>
 
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Pressable onPress={() => setReplay({ speed: 0.5 })} style={[styles.secondaryButtonNew, { flex: 1, borderWidth: 1, borderColor: palette.border }]}>
+              <Pressable onPress={() => setReplay({ speed: 0.5 })} style={replayBtnStyle}>
                 <Text style={{ color: palette.text, fontWeight: '700' }}>0.5×</Text>
               </Pressable>
-              <Pressable onPress={() => setReplay({ speed: 1 })} style={[styles.secondaryButtonNew, { flex: 1, borderWidth: 1, borderColor: palette.border }]}>
+              <Pressable onPress={() => setReplay({ speed: 1 })} style={replayBtnStyle}>
                 <Text style={{ color: palette.text, fontWeight: '700' }}>1×</Text>
               </Pressable>
-              <Pressable onPress={() => setReplay({ speed: 2 })} style={[styles.secondaryButtonNew, { flex: 1, borderWidth: 1, borderColor: palette.border }]}>
+              <Pressable onPress={() => setReplay({ speed: 2 })} style={replayBtnStyle}>
                 <Text style={{ color: palette.text, fontWeight: '700' }}>2×</Text>
               </Pressable>
             </View>
 
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Pressable onPress={() => setReplay({ seekIndex: 0 })} style={[styles.secondaryButtonNew, { flex: 1, borderWidth: 1, borderColor: palette.border }]}>
+              <Pressable onPress={() => setReplay({ seekIndex: 0 })} style={replayBtnStyle}>
                 <Text style={{ color: palette.text, fontWeight: '700' }}>Seek 0</Text>
               </Pressable>
-              <Pressable onPress={() => setReplay({ mode: 'LIVE', paused: false, speed: 1 })} style={[styles.secondaryButtonNew, { flex: 1, borderWidth: 1, borderColor: palette.border }]}>
+              <Pressable onPress={() => setReplay({ mode: 'LIVE', paused: false, speed: 1 })} style={replayBtnStyle}>
                 <Text style={{ color: palette.text, fontWeight: '700' }}>Back to Live</Text>
               </Pressable>
             </View>

@@ -32,7 +32,7 @@ function AckDot({ label, state }) {
       />
       <Text style={{ color: palette.textMuted, fontWeight: '800' }}>{label}</Text>
       <Text style={{ color: ok ? palette.safe : palette.warning, fontWeight: '800' }}>
-        {ok ? 'Ack’d' : 'Pending'}
+        {ok ? 'Acked' : 'Pending'}
       </Text>
     </View>
   );
@@ -50,7 +50,7 @@ export function DashboardScreen() {
 
   const severityUi = severityPill(globalSeverity);
   const score = selectedCamera?.pressure_score ?? 0;
-  const countdown = selectedCamera?.crush_in ? `${String(selectedCamera.crush_in).padStart(2, '0')}:00` : '--:--';
+  const countdown = typeof selectedCamera?.crush_in === 'number' ? `${String(selectedCamera.crush_in).padStart(2, '0')}:00` : '--:--';
 
   let roleDashboardKey = 'dashboard';
   if (role === 'POLICE') roleDashboardKey = 'policeDashboard';
@@ -70,17 +70,17 @@ export function DashboardScreen() {
 
         {/* Summary Cards */}
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 15 }}>
-          <View style={{ flex: 1, backgroundColor: palette.surfaceDark, padding: 15, borderRadius: 10 }}>
+          <View style={{ flex: 1,borderWidth: 1, borderColor: palette.border, backgroundColor: palette.inactiveSoft, padding: 15, borderRadius: 10 }}>
             <Text style={{ color: palette.textMuted, fontSize: 12 }}>{t('crowdDensity')}</Text>
-            <Text style={{ color: palette.text, fontSize: 24, fontWeight: 'bold' }}>{score.toFixed(1)}</Text>
+            <Text style={{ color: palette.text, fontSize: 24, fontWeight: '900' }}>{score.toFixed(1)}</Text>
           </View>
-          <View style={{ flex: 1, backgroundColor: palette.surfaceDark, padding: 15, borderRadius: 10 }}>
+          <View style={{ flex: 1,borderWidth: 1, borderColor: palette.border, backgroundColor: palette.inactiveSoft, padding: 15, borderRadius: 10 }}>
             <Text style={{ color: palette.textMuted, fontSize: 12 }}>{t('activeAlerts')}</Text>
-            <Text style={{ color: palette.danger, fontSize: 24, fontWeight: 'bold' }}>{mostSevereAlert ? 1 : 0}</Text>
+            <Text style={{ color: palette.danger, fontSize: 24, fontWeight: '900' }}>{mostSevereAlert ? 1 : 0}</Text>
           </View>
-          <View style={{ flex: 1, backgroundColor: palette.surfaceDark, padding: 15, borderRadius: 10 }}>
+          <View style={{ flex: 1,borderWidth: 1, borderColor: palette.border, backgroundColor: palette.inactiveSoft, padding: 15, borderRadius: 10 }}>
             <Text style={{ color: palette.textMuted, fontSize: 12 }}>{t('activeCameras')}</Text>
-            <Text style={{ color: palette.safe, fontSize: 24, fontWeight: 'bold' }}>{corridors.length}</Text>
+            <Text style={{ color: palette.safe, fontSize: 24, fontWeight: '900' }}>{corridors.length}</Text>
           </View>
         </View>
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
@@ -89,6 +89,9 @@ export function DashboardScreen() {
               key={t.id}
               onPress={() => setTempleId(t.id)}
               style={{
+                minHeight: 40,
+                alignItems: 'center',
+                justifyContent: 'center',
                 paddingHorizontal: 12,
                 paddingVertical: 8,
                 borderRadius: 999,
@@ -160,7 +163,9 @@ export function DashboardScreen() {
                   padding: 12,
                   borderRadius: 10,
                   borderWidth: 1,
+                  borderLeftWidth: c.tableName === tableName ? 3 : 1,
                   borderColor: c.tableName === tableName ? palette.primary : palette.border,
+                  borderLeftColor: c.tableName === tableName ? palette.primary : palette.border,
                   backgroundColor: palette.surface,
                   flexDirection: 'row',
                   justifyContent: 'space-between',

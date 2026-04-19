@@ -2,12 +2,12 @@
 // PURPOSE - Actions screen: show current alert context + role panels to update action status.
 
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View, ActivityIndicator } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useLive } from '../context/LiveContext';
-import { ROLE_LABELS, ROLES } from '../constants/roles';
+import { ROLES } from '../constants/roles';
 import { styles } from '../styles/appStyles';
 import { palette, colorForStatus, softColorForStatus } from '../theme';
 
@@ -29,117 +29,147 @@ function Panel({ title, expanded, onToggle, children, highlight, icon }) {
   );
 }
 
-function ActionButtons({ onSet, primaryLabel, secondaryLabel, tertiaryLabel }) {
-  const [pressedState, setPressedState] = useState(null);
-  const [completed, setCompleted] = useState(null);
+function ActionButtons({ onSet, primaryLabel, secondaryLabel, tertiaryLabel, currentStatus }) {
+  const initialCompleted =
+    currentStatus === primaryLabel   ? 'primary'   :
+    currentStatus === secondaryLabel ? 'secondary' :
+    currentStatus === tertiaryLabel  ? 'tertiary'  : null;
+
+  const [completed, setCompleted] = useState(initialCompleted);
+  const [loading, setLoading] = useState(null);
+  const [error, setError] = useState(null);
+
+  async function handlePress(slot, label) {
+    setLoading(slot);
+    setError(null);
+    try {
+      await onSet(label);
+      setCompleted(slot);
+    } catch (e) {
+      setError('Update failed. Try again.');
+    } finally {
+      setLoading(null);
+    }
+  }
 
   return (
     <View style={{ gap: 10 }}>
       <Pressable
-        onPress={() => { setCompleted('primary'); onSet(primaryLabel); }}
-        disabled={completed === 'primary'}
+        onPress={() => handlePress('primary', primaryLabel)}
+        disabled={completed === 'primary' || loading}
         style={[
-          styles.primaryButtonNew,
+          styles.primaryButton,
           { backgroundColor: completed === 'primary' ? palette.safe : palette.primary }
         ]}
       >
-        <Ionicons
-          name={completed === 'primary' ? 'checkmark-circle' : 'shield-checkmark'}
-          size={20}
-          color="#FFFFFF"
-        />
-        <Text style={[styles.primaryButtonLabel, { color: '#FFFFFF' }]}>{primaryLabel}</Text>
+        {loading === 'primary' ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <Ionicons
+            name={completed === 'primary' ? 'checkmark-circle' : 'shield-checkmark'}
+            size={20}
+            color="#FFFFFF"
+          />
+        )}
+        <Text style={[styles.primaryButtonLabel, { color: '#FFFFFF' }]}>
+          {loading === 'primary' ? 'UPDATING...' : primaryLabel}
+        </Text>
       </Pressable>
       {secondaryLabel ? (
         <Pressable
-          onPress={() => { setCompleted('secondary'); onSet(secondaryLabel); }}
-          disabled={completed === 'secondary'}
+          onPress={() => handlePress('secondary', secondaryLabel)}
+          disabled={completed === 'secondary' || loading}
           style={[
-            styles.secondaryButtonNew,
+            styles.secondaryButton,
             { borderColor: palette.border, borderWidth: 1 }
           ]}
         >
-          <Ionicons
-            name={completed === 'secondary' ? 'checkmark-circle' : 'car'}
-            size={16}
-            color={completed === 'secondary' ? palette.safe : palette.text}
-          />
+          {loading === 'secondary' ? (
+            <ActivityIndicator size="small" color={palette.text} />
+          ) : (
+            <Ionicons
+              name={completed === 'secondary' ? 'checkmark-circle' : 'car'}
+              size={16}
+              color={completed === 'secondary' ? palette.safe : palette.text}
+            />
+          )}
           <Text style={[styles.primaryButtonLabel, { color: completed === 'secondary' ? palette.safe : palette.text, fontSize: 14 }]}>
-            {secondaryLabel}
+            {loading === 'secondary' ? 'UPDATING...' : secondaryLabel}
           </Text>
         </Pressable>
       ) : null}
       {tertiaryLabel ? (
         <Pressable
-          onPress={() => { setCompleted('tertiary'); onSet(tertiaryLabel); }}
-          disabled={completed === 'tertiary'}
+          onPress={() => handlePress('tertiary', tertiaryLabel)}
+          disabled={completed === 'tertiary' || loading}
           style={[
-            styles.secondaryButtonNew,
+            styles.secondaryButton,
             { borderColor: palette.border, borderWidth: 1 }
-          ]
-        }
+          ]}
         >
-          <Ionicons
-            name={completed === 'tertiary' ? 'checkmark-circle' : 'location'}
-            size={16}
-            color={completed === 'tertiary' ? palette.safe : palette.text}
-          />
+          {loading === 'tertiary' ? (
+            <ActivityIndicator size="small" color={palette.text} />
+          ) : (
+            <Ionicons
+              name={completed === 'tertiary' ? 'checkmark-circle' : 'location'}
+              size={16}
+              color={completed === 'tertiary' ? palette.safe : palette.text}
+            />
+          )}
           <Text style={[styles.primaryButtonLabel, { color: completed === 'tertiary' ? palette.safe : palette.text, fontSize: 14 }]}>
-            {tertiaryLabel}
+            {loading === 'tertiary' ? 'UPDATING...' : tertiaryLabel}
           </Text>
         </Pressable>
       ) : null}
+      {error ? <Text style={{ color: palette.danger, fontSize: 12, marginTop: 4 }}>{error}</Text> : null}
     </View>
   );
 }
 
-function ActionCard({ action, isPrimary, onAction }) {
-  const [completed, setCompleted] = useState(false);
 
-  const icons = {
-    POLICE: 'shield',
-    TEMPLE_AGENCY: 'business',
-    TRANSPORT: 'bus',
-  };
+const STATUS_COLORS = { 
+  DISPATCHED: palette.safeSoft, 
+  EN_ROUTE: palette.warningSoft, 
+  ON_SITE: palette.safeSoft, 
+  HOLD_ACTIVE: palette.warningSoft,
+  REDIRECT: palette.warningSoft,
+  RESUME: palette.safeSoft,
+  HOLD_ISSUED: palette.warningSoft,
+  DIVERTED: palette.warningSoft,
+  CLEARED: palette.safeSoft,
+  PENDING: palette.surfaceMuted
+};
 
-  return (
-    <View style={[styles.actionCardNew, isPrimary ? styles.actionCardPrimary : null]}>
-      <View style={styles.actionCardHeader}>
-        <Ionicons name={icons[action.owner] || 'ellipse'} size={20} color={isPrimary ? palette.primary : palette.textMuted} style={styles.actionCardIcon} />
-        <Text style={styles.actionCardTitle}>{action.title}</Text>
-        {isPrimary && (
-          <View style={[styles.actionCardTag, { backgroundColor: palette.primarySoft, color: palette.primary }]}>
-            <Text style={[styles.actionCardTag, { backgroundColor: palette.primarySoft, color: palette.primary }]}>PRIMARY</Text>
-          </View>
-        )}
-      </View>
-      <Text style={styles.actionCardMeta}>Target: {action.target}</Text>
-      <Text style={[styles.actionCardDesc, { color: palette.textMuted }]}>{action.note}</Text>
-      <Pressable
-        onPress={() => { setCompleted(true); onAction(action.id); }}
-        disabled={completed}
-        style={[
-          styles.primaryButtonNew,
-          { marginTop: 12, backgroundColor: completed ? palette.safe : palette.primary }
-        ]}
-      >
-        <Ionicons name={completed ? 'checkmark-circle' : 'flash'} size={18} color="#FFFFFF" />
-        <Text style={[styles.primaryButtonLabel, { color: '#FFFFFF', fontSize: 14 }]}>
-          {completed ? 'COMPLETED' : 'EXECUTE'}
-        </Text>
-      </Pressable>
-    </View>
-  );
-}
+const STATUS_TEXT_COLORS = {
+  DISPATCHED: palette.safe,
+  EN_ROUTE: palette.warning,
+  ON_SITE: palette.safe,
+  HOLD_ACTIVE: palette.warning,
+  REDIRECT: palette.warning,
+  RESUME: palette.safe,
+  HOLD_ISSUED: palette.warning,
+  DIVERTED: palette.warning,
+  CLEARED: palette.safe,
+  PENDING: palette.text
+};
 
 export function ActionsScreen() {
   const { role } = useAuth();
   const { mostSevereAlert, updateAction } = useLive();
 
-  const [expanded, setExpanded] = useState(null);
+  const [expanded, setExpanded] = useState(() => new Set([role]));
 
-  const preferred = useMemo(() => role, [role]);
-  const expandedKey = expanded || preferred;
+  const toggleExpanded = (panelRole) => {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      if (next.has(panelRole)) {
+        next.delete(panelRole);
+      } else {
+        next.add(panelRole);
+      }
+      return next;
+    });
+  };
 
   if (!mostSevereAlert) {
     return (
@@ -172,8 +202,8 @@ export function ActionsScreen() {
       <Panel
         title="Police"
         icon="shield"
-        expanded={expandedKey === ROLES.POLICE}
-        onToggle={() => setExpanded(expandedKey === ROLES.POLICE ? null : ROLES.POLICE)}
+        expanded={expanded.has(ROLES.POLICE)}
+        onToggle={() => toggleExpanded(ROLES.POLICE)}
         highlight={role === ROLES.POLICE}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -188,9 +218,9 @@ export function ActionsScreen() {
             paddingHorizontal: 10, 
             paddingVertical: 4, 
             borderRadius: 4, 
-            backgroundColor: mostSevereAlert.actions?.POLICE?.status === 'DISPATCHED' ? palette.safeSoft : palette.surfaceMuted 
+            backgroundColor: STATUS_COLORS[mostSevereAlert.actions?.POLICE?.status || 'PENDING'] || palette.surfaceMuted 
           }}>
-            <Text style={{ color: mostSevereAlert.actions?.POLICE?.status === 'DISPATCHED' ? palette.safe : palette.text, fontWeight: '900' }}>
+            <Text style={{ color: STATUS_TEXT_COLORS[mostSevereAlert.actions?.POLICE?.status || 'PENDING'] || palette.text, fontWeight: '900' }}>
               {mostSevereAlert.actions?.POLICE?.status || 'PENDING'}
             </Text>
           </View>
@@ -202,6 +232,7 @@ export function ActionsScreen() {
               primaryLabel="DISPATCHED"
               secondaryLabel="EN_ROUTE"
               tertiaryLabel="ON_SITE"
+              currentStatus={mostSevereAlert.actions?.POLICE?.status}
             />
           </View>
         ) : null}
@@ -210,8 +241,8 @@ export function ActionsScreen() {
       <Panel
         title="Temple Trust"
         icon="business"
-        expanded={expandedKey === ROLES.TEMPLE_AGENCY}
-        onToggle={() => setExpanded(expandedKey === ROLES.TEMPLE_AGENCY ? null : ROLES.TEMPLE_AGENCY)}
+        expanded={expanded.has(ROLES.TEMPLE_AGENCY)}
+        onToggle={() => toggleExpanded(ROLES.TEMPLE_AGENCY)}
         highlight={role === ROLES.TEMPLE_AGENCY}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -226,16 +257,22 @@ export function ActionsScreen() {
             paddingHorizontal: 10, 
             paddingVertical: 4, 
             borderRadius: 4, 
-            backgroundColor: mostSevereAlert.actions?.TEMPLE_AGENCY?.status === 'HOLD_ACTIVE' ? palette.warningSoft : palette.surfaceMuted 
+            backgroundColor: STATUS_COLORS[mostSevereAlert.actions?.TEMPLE_AGENCY?.status || 'PENDING'] || palette.surfaceMuted 
           }}>
-            <Text style={{ color: mostSevereAlert.actions?.TEMPLE_AGENCY?.status === 'HOLD_ACTIVE' ? palette.warning : palette.text, fontWeight: '900' }}>
+            <Text style={{ color: STATUS_TEXT_COLORS[mostSevereAlert.actions?.TEMPLE_AGENCY?.status || 'PENDING'] || palette.text, fontWeight: '900' }}>
               {mostSevereAlert.actions?.TEMPLE_AGENCY?.status || 'PENDING'}
             </Text>
           </View>
         </View>
         {role === ROLES.TEMPLE_AGENCY ? (
           <View style={{ marginTop: 14 }}>
-            <ActionButtons onSet={s => setStatus(ROLES.TEMPLE_AGENCY, s)} primaryLabel="HOLD_ACTIVE" secondaryLabel="REDIRECT" tertiaryLabel="RESUME" />
+            <ActionButtons 
+              onSet={s => setStatus(ROLES.TEMPLE_AGENCY, s)} 
+              primaryLabel="HOLD_ACTIVE" 
+              secondaryLabel="REDIRECT" 
+              tertiaryLabel="RESUME" 
+              currentStatus={mostSevereAlert.actions?.TEMPLE_AGENCY?.status}
+            />
           </View>
         ) : null}
       </Panel>
@@ -243,8 +280,8 @@ export function ActionsScreen() {
       <Panel
         title="Transport"
         icon="bus"
-        expanded={expandedKey === ROLES.TRANSPORT}
-        onToggle={() => setExpanded(expandedKey === ROLES.TRANSPORT ? null : ROLES.TRANSPORT)}
+        expanded={expanded.has(ROLES.TRANSPORT)}
+        onToggle={() => toggleExpanded(ROLES.TRANSPORT)}
         highlight={role === ROLES.TRANSPORT}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -259,16 +296,22 @@ export function ActionsScreen() {
             paddingHorizontal: 10, 
             paddingVertical: 4, 
             borderRadius: 4, 
-            backgroundColor: mostSevereAlert.actions?.TRANSPORT?.status === 'HOLD_ISSUED' ? palette.warningSoft : palette.surfaceMuted 
+            backgroundColor: STATUS_COLORS[mostSevereAlert.actions?.TRANSPORT?.status || 'PENDING'] || palette.surfaceMuted 
           }}>
-            <Text style={{ color: mostSevereAlert.actions?.TRANSPORT?.status === 'HOLD_ISSUED' ? palette.warning : palette.text, fontWeight: '900' }}>
+            <Text style={{ color: STATUS_TEXT_COLORS[mostSevereAlert.actions?.TRANSPORT?.status || 'PENDING'] || palette.text, fontWeight: '900' }}>
               {mostSevereAlert.actions?.TRANSPORT?.status || 'PENDING'}
             </Text>
           </View>
         </View>
         {role === ROLES.TRANSPORT ? (
           <View style={{ marginTop: 14 }}>
-            <ActionButtons onSet={s => setStatus(ROLES.TRANSPORT, s)} primaryLabel="HOLD_ISSUED" secondaryLabel="DIVERTED" tertiaryLabel="CLEARED" />
+            <ActionButtons 
+              onSet={s => setStatus(ROLES.TRANSPORT, s)} 
+              primaryLabel="HOLD_ISSUED" 
+              secondaryLabel="DIVERTED" 
+              tertiaryLabel="CLEARED" 
+              currentStatus={mostSevereAlert.actions?.TRANSPORT?.status}
+            />
           </View>
         ) : null}
       </Panel>

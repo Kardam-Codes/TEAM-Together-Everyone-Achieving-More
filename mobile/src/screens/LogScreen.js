@@ -3,7 +3,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-
+import { Ionicons } from '@expo/vector-icons';
 import { useLive } from '../context/LiveContext';
 import { styles } from '../styles/appStyles';
 import { palette } from '../theme';
@@ -24,7 +24,7 @@ export function LogScreen() {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Log</Text>
         <Text style={styles.sectionSubtitle}>Resolved events (in-memory, resets on backend restart)</Text>
-        <Text style={{ color: palette.textSubtle, marginTop: 8 }}>API: {getResolvedApiBaseUrl()}</Text>
+        {__DEV__ && <Text style={{ color: palette.textSubtle, marginTop: 8 }}>API: {getResolvedApiBaseUrl()}</Text>}
       </View>
 
       <View style={styles.card}>
@@ -34,16 +34,7 @@ export function LogScreen() {
           onChangeText={setFilter}
           placeholder="Filter by severity or templeId…"
           placeholderTextColor={palette.textSubtle}
-          style={{
-            marginTop: 12,
-            borderWidth: 1,
-            borderColor: palette.border,
-            backgroundColor: palette.surfaceMuted,
-            borderRadius: 10,
-            paddingHorizontal: 12,
-            paddingVertical: 10,
-            color: palette.text,
-          }}
+          style={[styles.input, { marginTop: 12 }]}
         />
       </View>
 
@@ -61,14 +52,21 @@ export function LogScreen() {
             </View>
           ))}
         </View>
-        <Text style={{ color: palette.textSubtle, marginTop: 12 }}>
-          Add Temple/Add CCTV forms can be added next (backend endpoints exist).
-        </Text>
+        {__DEV__ && (
+          <Text style={{ color: palette.textSubtle, marginTop: 12 }}>
+            Add Temple/Add CCTV forms can be added next (backend endpoints exist).
+          </Text>
+        )}
       </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Events</Text>
-        {!filtered.length ? <Text style={{ color: palette.textMuted, marginTop: 8 }}>No resolved events yet.</Text> : null}
+        {!filtered.length ? (
+          <View style={{ alignItems: 'center', marginTop: 24, marginBottom: 16 }}>
+            <Ionicons name="document-text-outline" size={48} color={palette.textMuted} />
+            <Text style={{ color: palette.textMuted, marginTop: 8 }}>No resolved events yet.</Text>
+          </View>
+        ) : null}
         <View style={{ marginTop: 12, gap: 10 }}>
           {filtered.map(l => (
             <View key={l.id} style={{ padding: 12, borderWidth: 1, borderColor: palette.border, borderRadius: 10 }}>

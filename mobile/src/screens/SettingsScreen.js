@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Alert, ScrollView } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { palette } from '../theme';
 import { useTranslation } from 'react-i18next';
+import { styles } from '../styles/appStyles';
+import { getResolvedApiBaseUrl } from '../api/liveClient';
 
 export function SettingsScreen() {
   const { role, username, logout } = useAuth();
@@ -22,7 +24,7 @@ export function SettingsScreen() {
       return;
     }
     try {
-      const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.13:3000/api';
+      const API_BASE_URL = getResolvedApiBaseUrl() + '/api';
       const res = await fetch(`${API_BASE_URL}/cameras`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -41,136 +43,65 @@ export function SettingsScreen() {
   const isAdminOrAgency = role === 'ADMIN' || role === 'TEMPLE_AGENCY';
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>{t('settings')}</Text>
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      <Text style={[styles.sectionTitle, { fontSize: 28, marginBottom: 8 }]}>{t('settings')}</Text>
 
-      <View style={styles.section}>
-        <Text style={styles.label}>Account</Text>
-        <Text style={styles.text}>{t('username')}: {username}</Text>
-        <Text style={styles.text}>{t('role')}: {role}</Text>
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Account</Text>
+        <Text style={{ color: palette.text, marginTop: 10 }}>{t('username')}: {username}</Text>
+        <Text style={{ color: palette.text, marginTop: 5 }}>{t('role')}: {role}</Text>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.label}>{t('language')}</Text>
-        <View style={styles.row}>
-          <TouchableOpacity style={styles.btn} onPress={() => changeLanguage('en')}><Text style={styles.btnText}>English</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.btn} onPress={() => changeLanguage('hi')}><Text style={styles.btnText}>हिंदी</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.btn} onPress={() => changeLanguage('gu')}><Text style={styles.btnText}>ગુજરાતી</Text></TouchableOpacity>
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>{t('language')}</Text>
+        <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
+          <TouchableOpacity style={[styles.secondaryButton, { paddingVertical: 8 }]} onPress={() => changeLanguage('en')}>
+            <Text style={{ color: palette.text, fontWeight: '700' }}>English</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.secondaryButton, { paddingVertical: 8 }]} onPress={() => changeLanguage('hi')}>
+            <Text style={{ color: palette.text, fontWeight: '700' }}>हिंदी</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.secondaryButton, { paddingVertical: 8 }]} onPress={() => changeLanguage('gu')}>
+            <Text style={{ color: palette.text, fontWeight: '700' }}>ગુજરાતી</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
       {isAdminOrAgency && (
-        <View style={styles.section}>
-          <Text style={styles.label}>{t('addCamera')}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Camera ID (e.g. cam_001)"
-            placeholderTextColor={palette.textMuted}
-            value={cameraId}
-            onChangeText={setCameraId}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Area/Location (e.g. Main Gate)"
-            placeholderTextColor={palette.textMuted}
-            value={area}
-            onChangeText={setArea}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Feed URL (Optional)"
-            placeholderTextColor={palette.textMuted}
-            value={feedUrl}
-            onChangeText={setFeedUrl}
-          />
-          <TouchableOpacity style={styles.primaryBtn} onPress={handleAddCamera}>
-            <Text style={styles.primaryBtnText}>{t('save')}</Text>
-          </TouchableOpacity>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>{t('addCamera')}</Text>
+          <View style={{ marginTop: 12, gap: 10 }}>
+            <TextInput
+              style={styles.input}
+              placeholder="Camera ID (e.g. cam_001)"
+              placeholderTextColor={palette.textMuted}
+              value={cameraId}
+              onChangeText={setCameraId}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Area/Location (e.g. Main Gate)"
+              placeholderTextColor={palette.textMuted}
+              value={area}
+              onChangeText={setArea}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Feed URL (Optional)"
+              placeholderTextColor={palette.textMuted}
+              value={feedUrl}
+              onChangeText={setFeedUrl}
+            />
+            <TouchableOpacity style={[styles.primaryButton, { marginTop: 4 }]} onPress={handleAddCamera}>
+              <Text style={styles.primaryButtonLabel}>{t('save')}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
-      <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
-        <Text style={styles.logoutText}>{t('logout')}</Text>
+      <TouchableOpacity style={[styles.primaryButton, { backgroundColor: palette.danger, marginTop: 16 }]} onPress={logout}>
+        <Text style={styles.primaryButtonLabel}>{t('logout')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: palette.background,
-    padding: 20,
-    paddingTop: 60,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: palette.text,
-    marginBottom: 20,
-  },
-  section: {
-    backgroundColor: palette.surface,
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: palette.textMuted,
-    marginBottom: 10,
-  },
-  text: {
-    fontSize: 16,
-    color: palette.text,
-    marginBottom: 5,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  btn: {
-    backgroundColor: palette.surfaceDark,
-    padding: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: palette.border,
-  },
-  btnText: {
-    color: palette.text,
-  },
-  input: {
-    backgroundColor: palette.surfaceDark,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 10,
-    color: palette.text,
-    borderWidth: 1,
-    borderColor: palette.border,
-  },
-  primaryBtn: {
-    backgroundColor: palette.primary,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 5,
-  },
-  primaryBtnText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
-  logoutBtn: {
-    backgroundColor: palette.danger,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 30,
-  },
-  logoutText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-  }
-});

@@ -55,7 +55,7 @@ export const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 18,
     borderWidth: 1,
-    borderColor: 'rgba(226, 232, 240, 0.8)',
+    borderColor: palette.border,
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
@@ -93,7 +93,7 @@ export const styles = StyleSheet.create({
     backgroundColor: palette.dangerSoft,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#F4C9C9',
+    borderColor: palette.dangerSoft,
     padding: 14,
   },
   timerLabel: {
@@ -130,23 +130,7 @@ export const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
   },
-  primaryButton: {
-    backgroundColor: palette.primary,
-    borderRadius: 8,
-    padding: 15,
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    lineHeight: 23,
-    fontWeight: '800',
-  },
-  primaryButtonMeta: {
-    color: '#DDE9FF',
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 2,
-  },
+
   metricStrip: {
     backgroundColor: palette.surface,
     borderRadius: 10,
@@ -290,34 +274,7 @@ export const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: '800',
   },
-  dispatchButton: {
-    backgroundColor: palette.primary,
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  dispatchText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    lineHeight: 21,
-    fontWeight: '800',
-  },
-  secondaryButton: {
-    backgroundColor: palette.surfaceMuted,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: palette.border,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  secondaryText: {
-    color: palette.text,
-    fontSize: 15,
-    lineHeight: 21,
-    fontWeight: '700',
-  },
+
   metricRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -475,15 +432,15 @@ export const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 10,
     borderWidth: 1,
+    borderColor: palette.border,
     gap: 12,
   },
   metricCardIcon: {
-    fontSize: 24,
     width: 40,
     height: 40,
     borderRadius: 8,
-    textAlign: 'center',
-    lineHeight: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   metricCardContent: {
     flex: 1,
@@ -502,7 +459,7 @@ export const styles = StyleSheet.create({
     fontWeight: '800',
     marginLeft: 4,
   },
-  actionCardNew: {
+  actionCard: {
     backgroundColor: palette.surface,
     borderRadius: 12,
     borderWidth: 1,
@@ -510,7 +467,7 @@ export const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
   },
-  actionCardPrimary: {
+  primaryActionCard: {
     borderWidth: 2,
     borderColor: palette.primary,
   },
@@ -546,7 +503,7 @@ export const styles = StyleSheet.create({
     marginTop: 8,
     lineHeight: 20,
   },
-  primaryButtonNew: {
+  primaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -568,7 +525,7 @@ export const styles = StyleSheet.create({
   primaryButtonCompleted: {
     backgroundColor: palette.safe,
   },
-  secondaryButtonNew: {
+  secondaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -615,5 +572,14 @@ export const styles = StyleSheet.create({
   chipText: {
     fontSize: 12,
     fontWeight: '700',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surfaceMuted,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: palette.text,
   },
 });

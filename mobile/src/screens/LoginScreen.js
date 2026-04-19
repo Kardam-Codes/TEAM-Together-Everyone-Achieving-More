@@ -30,10 +30,13 @@ export function LoginScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>{t('login')}</Text>
-        
-        {error && <Text style={styles.error}>{error}</Text>}
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <View style={styles.card}>
+          <Text style={styles.title}>{t('login')}</Text>
+          
+          <View style={styles.errorContainer}>
+            <Text style={styles.error}>{error || ''}</Text>
+          </View>
 
         <TextInput
           style={styles.input}
@@ -59,7 +62,8 @@ export function LoginScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.navigate('Signup')} style={{ marginTop: 15 }}>
           <Text style={styles.linkText}>Don't have an account? {t('signup')}</Text>
         </TouchableOpacity>
-      </View>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -68,6 +72,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: palette.background,
+  },
+  scroll: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
   },
@@ -75,8 +82,10 @@ const styles = StyleSheet.create({
     backgroundColor: palette.surface,
     padding: 24,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: palette.border,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 10,
     elevation: 5,
@@ -114,9 +123,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
   },
+  errorContainer: {
+    minHeight: 20,
+    marginBottom: 16,
+    justifyContent: 'center',
+  },
   error: {
     color: palette.danger,
-    marginBottom: 16,
     textAlign: 'center',
   }
 });

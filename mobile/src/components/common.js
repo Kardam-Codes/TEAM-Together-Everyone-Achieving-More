@@ -11,7 +11,10 @@ import { colorForStatus, palette, softColorForStatus } from '../theme';
 
 export function StatusPill({ level, label }) {
   return (
-    <View style={[styles.statusPill, { backgroundColor: softColorForStatus(level), borderColor: colorForStatus(level) }]}>
+    <View 
+      accessibilityLabel={label}
+      style={[styles.statusPill, { backgroundColor: softColorForStatus(level), borderColor: colorForStatus(level) }]}
+    >
       <View style={[styles.statusDot, { backgroundColor: colorForStatus(level) }]} />
       <Text style={[styles.statusText, { color: colorForStatus(level) }]}>{label}</Text>
     </View>
@@ -39,17 +42,18 @@ export function LineChart({ values, dangerAt }) {
   if (validValues.length === 1) {
     validValues = [validValues[0], validValues[0]];
   }
+  const safeValues = validValues.map(v => (Number.isFinite(v) ? v : 0));
   
   const data = {
-    labels: validValues.map(() => ''),
+    labels: safeValues.map(() => ''),
     datasets: [
       {
-        data: validValues,
+        data: safeValues,
         color: (opacity = 1) => palette.primary,
         strokeWidth: 3,
       },
       {
-        data: Array(validValues.length).fill(dangerAt),
+        data: Array(safeValues.length).fill(dangerAt),
         color: (opacity = 1) => palette.dangerSoft,
         strokeWidth: 2,
         withScrollableDot: false,
@@ -95,6 +99,7 @@ export function LineChart({ values, dangerAt }) {
 }
 
 export function BottomNavigation({ activeTab, onChange }) {
+  // LEGACY — not mounted by active navigator
   const tabIcons = {
     alert: 'warning',
     actions: 'construct',

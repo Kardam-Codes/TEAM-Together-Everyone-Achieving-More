@@ -36,7 +36,9 @@ export function SignupScreen({ navigation }) {
         <View style={styles.card}>
           <Text style={styles.title}>{t('signup')}</Text>
           
-          {error && <Text style={styles.error}>{error}</Text>}
+          <View style={styles.errorContainer}>
+            <Text style={styles.error}>{error || ''}</Text>
+          </View>
 
           <TextInput
             style={styles.input}
@@ -97,8 +99,10 @@ const styles = StyleSheet.create({
     backgroundColor: palette.surface,
     padding: 24,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: palette.border,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 10,
     elevation: 5,
@@ -141,7 +145,7 @@ const styles = StyleSheet.create({
   },
   roleButtonActive: {
     borderColor: palette.primary,
-    backgroundColor: palette.primary + '20',
+    backgroundColor: palette.primarySoft,
   },
   roleText: {
     color: palette.textMuted,
@@ -167,9 +171,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
   },
+  errorContainer: {
+    minHeight: 20,
+    marginBottom: 16,
+    justifyContent: 'center',
+  },
   error: {
     color: palette.danger,
-    marginBottom: 16,
     textAlign: 'center',
   }
 });

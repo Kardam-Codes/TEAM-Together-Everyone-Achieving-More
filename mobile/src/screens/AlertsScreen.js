@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLive } from '../context/LiveContext';
 import { ROLE_LABELS } from '../constants/roles';
 import { styles } from '../styles/appStyles';
-import { colorForStatus, palette, bgColorForStatus, softColorForStatus } from '../theme';
+import { colorForStatus, palette, softColorForStatus } from '../theme';
 
 function severityLevel(severity) {
   if (severity === 'DANGER') return 'danger';
@@ -35,11 +35,11 @@ function AlertPill({ level, priority }) {
 }
 
 function CountdownTimer({ time }) {
-  const [pulseAnim] = useState(new Animated.Value(1));
+  const pulseAnim = React.useRef(new Animated.Value(1)).current;
   
   React.useEffect(() => {
     let anim;
-    if (time) {
+    if (time && time !== '--:--') {
       anim = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, { toValue: 1.1, duration: 500, useNativeDriver: true }),
@@ -64,10 +64,10 @@ function CountdownTimer({ time }) {
 function MetricCard({ icon, label, value, trend, status, color }) {
   const statusColor = color || colorForStatus(status);
   const bg = softColorForStatus(status);
-  const trendIcon = trend > 0 ? 'arrow-up' : trend < 0 ? 'arrow-down' : 'remove';
+  const trendIcon = trend > 0 ? 'arrow-up' : trend < 0 ? 'arrow-down' : 'arrow-forward';
   const trendColor = trend > 0 ? palette.danger : trend < 0 ? palette.safe : palette.textMuted;
   return (
-    <View style={[styles.metricCard, { backgroundColor: bg }]}>
+    <View style={styles.metricCard}>
       <View style={[styles.metricCardIcon, { backgroundColor: bg }]}>
         <Ionicons name={icon} size={20} color={statusColor} />
       </View>
@@ -123,14 +123,14 @@ export function AlertsScreen() {
       <View style={styles.card}>
         <View style={styles.rowBetween}>
           <Text style={styles.sectionTitle}>Alerts</Text>
-          {liveError && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-              <ActivityIndicator size="small" color={palette.warning} />
-              <Text style={{ color: palette.warning, fontSize: 12, fontWeight: 'bold' }}>Reconnecting...</Text>
-            </View>
-          )}
         </View>
         <Text style={styles.sectionSubtitle}>Role: {ROLE_LABELS[role]}</Text>
+        {liveError && (
+          <View style={{ backgroundColor: palette.warningSoft, padding: 8, borderRadius: 8, marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <ActivityIndicator size="small" color={palette.warning} />
+            <Text style={{ color: palette.warning, fontSize: 13, fontWeight: '700' }}>Reconnecting... {liveError}</Text>
+          </View>
+        )}
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
           <Pressable
             onPress={() => setTab('active')}
@@ -164,14 +164,15 @@ export function AlertsScreen() {
       {!live && liveError ? (
         <View style={[styles.card, { alignItems: 'center', paddingVertical: 40 }]}>
           <ActivityIndicator size="large" color={palette.primary} />
-          <Text style={{ color: palette.text, marginTop: 15, fontWeight: 'bold' }}>Fetching real-time data...</Text>
+          <Text style={{ color: palette.text, marginTop: 15, fontWeight: '700' }}>Fetching real-time data...</Text>
           <Text style={{ color: palette.danger, marginTop: 5, textAlign: 'center' }}>{liveError}</Text>
         </View>
       ) : activeAlert && tab === 'active' ? (
         <>
-          <AlertPill level={level} priority={priority} />
-          
           <View style={[styles.card, { borderLeftWidth: 5, borderLeftColor: colorForStatus(level) }]}>
+            <View style={{ marginBottom: 12 }}>
+              <AlertPill level={level} priority={priority} />
+            </View>
             <Text style={{ color: palette.text, fontWeight: '900', fontSize: 22, marginBottom: 4 }}>
               {activeAlert.triggerSnapshot?.cctv_camera_location || activeAlert.corridorId || 'Unknown Location'}
             </Text>
@@ -232,9 +233,15 @@ export function AlertsScreen() {
             )}
             {reasonsExpanded && (
               <View style={{ marginTop: 12, gap: 8 }}>
-                <ReasonItem reason="Density above safe limit (3.5 persons/m²)" expanded />
-                <ReasonItem reason="Entry flow exceeds exit capacity" expanded />
-                <ReasonItem reason="Walking speed dropping below threshold" expanded />
+                {activeAlert.triggerSnapshot?.reasons?.length ? (
+                  activeAlert.triggerSnapshot.reasons.map(r => <ReasonItem key={r} reason={r} />)
+                ) : (
+                  <>
+                    <ReasonItem reason="Density above safe limit (3.5 persons/m²)" />
+                    <ReasonItem reason="Entry flow exceeds exit capacity" />
+                    <ReasonItem reason="Walking speed dropping below threshold" />
+                  </>
+                )}
               </View>
             )}
           </Pressable>
@@ -260,7 +267,7 @@ export function AlertsScreen() {
                       setButtonPressed(false);
                     }
                   }}
-                  style={[styles.primaryButtonNew, { marginTop: 8, backgroundColor: palette.primary }]}
+                  style={[styles.primaryButton, { marginTop: 8, backgroundColor: palette.primary }]}
                 >
                   <Ionicons name="notifications" size={20} color="#FFFFFF" style={styles.primaryButtonIcon} />
                   <Text style={[styles.primaryButtonLabel, { color: '#FFFFFF' }]}>NOTIFY AUTHORITIES</Text>
@@ -272,7 +279,7 @@ export function AlertsScreen() {
               onPress={handleAcknowledge}
               disabled={dispatched}
               style={[
-                styles.primaryButtonNew,
+                styles.primaryButton,
                 buttonPressed && styles.primaryButtonPressed,
                 dispatched ? styles.primaryButtonCompleted : null,
                 { marginTop: 8, backgroundColor: dispatched ? palette.safe : palette.primary }
