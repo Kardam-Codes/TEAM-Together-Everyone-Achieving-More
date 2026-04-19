@@ -234,7 +234,7 @@ export function AlertsScreen() {
         </View>
       ) : activeAlert && tab === 'active' ? (
         <>
-          <View style={[styles.card, { borderLeftWidth: 5, borderLeftColor: colorForStatus(level) }]}>
+          <View style={styles.card}>
             <View style={{ marginBottom: 12 }}>
               <AlertPill level={level} priority={priority} />
             </View>
@@ -242,7 +242,7 @@ export function AlertsScreen() {
               {activeAlert.triggerSnapshot?.cctv_camera_location || activeAlert.corridorId || 'Unknown Location'}
             </Text>
             <Text style={{ color: palette.textMuted }}>
-              Alert #{activeAlert.id?.slice(-6) || '0000'} · {new Date(activeAlert.createdAt).toLocaleTimeString()}
+              {new Date(activeAlert.createdAt).toLocaleTimeString()}
             </Text>
           </View>
 
