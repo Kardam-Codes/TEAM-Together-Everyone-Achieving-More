@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Animated, Pressable, ScrollView, Text, View, ActivityIndicator, Alert } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -106,12 +106,33 @@ export function AlertsScreen() {
   const { role } = useAuth();
   const { alertsActive, alertsResolved, acknowledge, notifyAuthorities, mostSevereAlert, live, liveError } = useLive();
   const [tab, setTab] = useState('active');
+  const [selectedAlertId, setSelectedAlertId] = useState(null);
   const [reasonsExpanded, setReasonsExpanded] = useState(false);
   const [buttonPressed, setButtonPressed] = useState(false);
   const [dispatched, setDispatched] = useState(false);
 
   const list = tab === 'active' ? alertsActive : alertsResolved;
-  const activeAlert = mostSevereAlert;
+  
+  const activeAlert = useMemo(() => {
+    if (tab !== 'active') return null;
+    if (selectedAlertId) {
+      const found = alertsActive.find(a => a.id === selectedAlertId);
+      if (found) return found;
+    }
+    return mostSevereAlert;
+  }, [alertsActive, mostSevereAlert, selectedAlertId, tab]);
+
+  // Reset selectedAlertId if the alert is no longer active
+  useEffect(() => {
+    if (selectedAlertId && !alertsActive.some(a => a.id === selectedAlertId)) {
+      setSelectedAlertId(null);
+    }
+  }, [alertsActive, selectedAlertId]);
+
+  // Reset dispatched state when activeAlert changes
+  useEffect(() => {
+    setDispatched(Boolean(activeAlert?.acks?.[role]?.ackedAt));
+  }, [activeAlert, role]);
 
   const handleAcknowledge = async () => {
     if (!activeAlert || dispatched) return;
@@ -172,6 +193,38 @@ export function AlertsScreen() {
           </Pressable>
         </View>
       </View>
+
+      {tab === 'active' && alertsActive.length > 1 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 8 }}>
+          {alertsActive.map(alert => {
+            const isSelected = activeAlert?.id === alert.id;
+            const lvl = severityLevel(alert.severity);
+            const dotColor = colorForStatus(lvl);
+            return (
+              <Pressable
+                key={alert.id}
+                onPress={() => setSelectedAlertId(alert.id)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  backgroundColor: isSelected ? palette.primarySoft : palette.surface,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: isSelected ? palette.primary : palette.border,
+                  gap: 8,
+                }}
+              >
+                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: dotColor }} />
+                <Text style={{ color: isSelected ? palette.primary : palette.text, fontWeight: '900' }}>
+                  {alert.triggerSnapshot?.cctv_camera_location || alert.corridorId}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      )}
 
       {!live && liveError ? (
         <View style={[styles.card, { alignItems: 'center', paddingVertical: 40 }]}>
