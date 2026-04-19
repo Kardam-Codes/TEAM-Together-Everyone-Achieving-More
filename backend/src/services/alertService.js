@@ -46,6 +46,13 @@ function defaultActions() {
       updatedAt: null,
       notes: null,
     },
+    ADMIN: {
+      role: "ADMIN",
+      recommended: "Oversee coordination and escalate if necessary.",
+      status: "PENDING",
+      updatedAt: null,
+      notes: null,
+    },
   };
 }
 
@@ -192,11 +199,33 @@ function updateAction({ alertId, role, status, notes }) {
   return alert;
 }
 
+async function notifyAuthorities({ alertId }) {
+  const alert = store.alertsActive.find((a) => a.id === alertId);
+  if (!alert) throw new Error("Alert not found");
+
+  alert._authoritiesNotifiedAt = nowIso();
+  if (alert.acks?.ADMIN && !alert.acks.ADMIN.ackedAt) {
+    alert.acks.ADMIN.ackedAt = nowIso();
+  }
+  alert.updatedAt = nowIso();
+
+  const tokens = store.devices.filter(d => d.role !== 'ADMIN').map((d) => d.expoPushToken);
+  await sendExpoPush({
+    tokens,
+    title: `ADMIN DISPATCH: ${alert.severity}`,
+    body: `Admin requests acknowledgement for ${alert.corridorId}`,
+    data: { alertId: alert.id, reason: "admin_dispatch" },
+  });
+
+  return alert;
+}
+
 module.exports = {
   SAFE_STREAK_TO_RESOLVE,
   updateAlertsFromLiveStates,
   listAlerts,
   ackAlert,
   updateAction,
+  notifyAuthorities,
 };
 

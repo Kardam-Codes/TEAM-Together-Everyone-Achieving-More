@@ -2,24 +2,27 @@
 // PURPOSE - Shared colors and status helpers for the mobile alert app.
 
 export const palette = {
-  background: '#F4F6F8',
+  background: '#F8FAFC',
   surface: '#FFFFFF',
-  surfaceMuted: '#EEF2F5',
-  surfaceDark: '#17202A',
-  text: '#16202A',
-  textMuted: '#5B6773',
-  textSubtle: '#7A8793',
-  border: '#D8DEE5',
-  danger: '#C62828',
-  dangerSoft: '#FDECEC',
-  warning: '#B26A00',
-  warningSoft: '#FFF4DE',
-  safe: '#1B7F4C',
-  safeSoft: '#EAF7EF',
-  inactive: '#98A2AD',
-  inactiveSoft: '#EDF0F2',
-  primary: '#2457A6',
-  primarySoft: '#E8F0FE',
+  surfaceMuted: '#F1F5F9',
+  surfaceDark: '#0F172A',
+  text: '#0F172A',
+  textMuted: '#64748B',
+  textSubtle: '#94A3B8',
+  border: '#E2E8F0',
+  danger: '#DC2626',
+  dangerSoft: '#FEF2F2',
+  dangerBg: '#FEF2F2',
+  warning: '#D97706',
+  warningSoft: '#FEF3C7',
+  warningBg: '#FFFBEB',
+  safe: '#16A34A',
+  safeSoft: '#DCFCE7',
+  safeBg: '#F0FDF4',
+  inactive: '#94A3B8',
+  inactiveSoft: '#F1F5F9',
+  primary: '#2563EB',
+  primarySoft: '#DBEAFE',
 };
 
 export function colorForStatus(status) {
@@ -52,4 +55,20 @@ export function softColorForStatus(status) {
   }
 
   return palette.inactiveSoft;
+}
+
+export function bgColorForStatus(status) {
+  if (status === 'danger') {
+    return palette.dangerBg;
+  }
+
+  if (status === 'warning') {
+    return palette.warningBg;
+  }
+
+  if (status === 'safe') {
+    return palette.safeBg;
+  }
+
+  return palette.surfaceMuted;
 }

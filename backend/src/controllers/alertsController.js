@@ -36,5 +36,17 @@ function setAction(req, res) {
   }
 }
 
-module.exports = { list, ack, setAction };
+function notify(req, res) {
+  try {
+    const alertId = req.params.alertId;
+    const { notifyAuthorities } = require("../services/alertService");
+    notifyAuthorities({ alertId })
+      .then((alert) => res.json({ alert }))
+      .catch((err) => res.status(400).json({ error: err?.message || "Failed to notify authorities" }));
+  } catch (err) {
+    res.status(400).json({ error: "Failed to notify authorities" });
+  }
+}
+
+module.exports = { list, ack, setAction, notify };
 

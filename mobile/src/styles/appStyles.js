@@ -1,7 +1,7 @@
 // OWNER - HEET
 // PURPOSE - Shared styles for the mobile crowd alert app.
 
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Animated } from 'react-native';
 
 import { palette } from '../theme';
 
@@ -48,14 +48,19 @@ export const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 96,
-    gap: 14,
+    gap: 16,
   },
   card: {
     backgroundColor: palette.surface,
-    borderRadius: 10,
+    borderRadius: 16,
+    padding: 18,
     borderWidth: 1,
-    borderColor: palette.border,
-    padding: 16,
+    borderColor: 'rgba(226, 232, 240, 0.8)',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
   },
   incidentCard: {
     borderLeftWidth: 5,
@@ -350,54 +355,7 @@ export const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: '800',
   },
-  chart: {
-    height: 170,
-    backgroundColor: '#FBFCFE',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: palette.border,
-    marginTop: 14,
-    padding: 12,
-    position: 'relative',
-  },
-  thresholdLine: {
-    position: 'absolute',
-    left: 12,
-    right: 12,
-    bottom: '47%',
-    height: 1,
-    backgroundColor: palette.warning,
-  },
-  thresholdText: {
-    position: 'absolute',
-    right: 14,
-    bottom: '48%',
-    color: palette.warning,
-    fontSize: 11,
-    lineHeight: 14,
-    backgroundColor: '#FBFCFE',
-    paddingHorizontal: 4,
-  },
-  chartPoint: {
-    position: 'absolute',
-    width: 11,
-    height: 11,
-    borderRadius: 6,
-    marginLeft: -5,
-  },
-  chartLabels: {
-    position: 'absolute',
-    left: 12,
-    right: 12,
-    bottom: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  chartLabel: {
-    color: palette.textSubtle,
-    fontSize: 11,
-    lineHeight: 14,
-  },
+
   statusPill: {
     borderWidth: 1,
     borderRadius: 999,
@@ -450,5 +408,212 @@ export const styles = StyleSheet.create({
   },
   navLabelActive: {
     color: palette.primary,
+  },
+  navIcon: {
+    fontSize: 20,
+    marginBottom: 2,
+  },
+  headerBadge: {
+    position: 'absolute',
+    right: -4,
+    top: -4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: palette.danger,
+  },
+  headerBadgePulsing: {
+    position: 'absolute',
+    right: -4,
+    top: -4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: palette.danger,
+  },
+  alertPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 8,
+  },
+  alertPillIcon: {
+    fontSize: 18,
+  },
+  alertPillText: {
+    fontSize: 15,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  countdownBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    gap: 12,
+  },
+  countdownIcon: {
+    fontSize: 32,
+  },
+  countdownValue: {
+    fontSize: 48,
+    fontWeight: '900',
+    fontVariant: ['tabular-nums'],
+  },
+  countdownLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  metricCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 12,
+  },
+  metricCardIcon: {
+    fontSize: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    textAlign: 'center',
+    lineHeight: 40,
+  },
+  metricCardContent: {
+    flex: 1,
+  },
+  metricCardLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  metricCardValue: {
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  metricCardTrend: {
+    fontSize: 14,
+    fontWeight: '800',
+    marginLeft: 4,
+  },
+  actionCardNew: {
+    backgroundColor: palette.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.border,
+    padding: 16,
+    marginBottom: 12,
+  },
+  actionCardPrimary: {
+    borderWidth: 2,
+    borderColor: palette.primary,
+  },
+  actionCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  actionCardIcon: {
+    fontSize: 18,
+  },
+  actionCardTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    flex: 1,
+  },
+  actionCardTag: {
+    fontSize: 11,
+    fontWeight: '800',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    textTransform: 'uppercase',
+  },
+  actionCardMeta: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  actionCardDesc: {
+    fontSize: 14,
+    marginTop: 8,
+    lineHeight: 20,
+  },
+  primaryButtonNew: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    gap: 10,
+  },
+  primaryButtonIcon: {
+    fontSize: 20,
+  },
+  primaryButtonLabel: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  primaryButtonPressed: {
+    opacity: 0.7,
+  },
+  primaryButtonCompleted: {
+    backgroundColor: palette.safe,
+  },
+  secondaryButtonNew: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    gap: 8,
+  },
+  secondaryButtonIcon: {
+    fontSize: 16,
+  },
+  reasonItemNew: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: 6,
+    gap: 10,
+  },
+  reasonIcon: {
+    fontSize: 14,
+    marginTop: 3,
+  },
+  reasonContent: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    gap: 6,
+  },
+  chipIcon: {
+    fontSize: 12,
+  },
+  chipText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

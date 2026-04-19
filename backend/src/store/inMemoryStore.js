@@ -7,7 +7,7 @@ function newId(prefix) {
   return `${prefix}_${crypto.randomUUID()}`;
 }
 
-const ROLES = ["TEMPLE_STAFF", "POLICE", "TRANSPORT"];
+const ROLES = ["TEMPLE_STAFF", "POLICE", "TRANSPORT", "ADMIN"];
 
 const store = {
   temples: [],

@@ -25,6 +25,7 @@ router.post('/temples/:templeId/corridors', templesController.createCorridor);
 router.get('/alerts', alertsController.list);
 router.post('/alerts/:alertId/ack', alertsController.ack);
 router.post('/alerts/:alertId/actions', alertsController.setAction);
+router.post('/alerts/:alertId/notify', alertsController.notify);
 
 // Logs
 router.get('/logs', logsController.list);

@@ -37,7 +37,7 @@ function AckDot({ label, state }) {
 }
 
 export function DashboardScreen() {
-  const { role } = useAuth();
+  const { role, logout } = useAuth();
   const { temples, templeId, setTempleId, live, tableName, setTableName, selectedCamera, globalSeverity, mostSevereAlert } = useLive();
 
   const corridors = useMemo(() => {
@@ -52,7 +52,12 @@ export function DashboardScreen() {
   return (
     <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: 18 }]}>
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Dashboard</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={styles.sectionTitle}>Dashboard</Text>
+          <Pressable onPress={() => logout()} style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: palette.dangerSoft, borderRadius: 6 }}>
+            <Text style={{ color: palette.danger, fontSize: 12, fontWeight: '800' }}>LOGOUT</Text>
+          </Pressable>
+        </View>
         <Text style={styles.sectionSubtitle}>
           Role: {ROLE_LABELS[role]} · Temple: {templeId}
         </Text>

@@ -189,6 +189,10 @@ export function LiveProvider({ children }) {
       async acknowledge(alertId, role) {
         return postAck({ alertId, role });
       },
+      async notifyAuthorities(alertId) {
+        const { notifyAuthorities: apiNotify } = require('../api/liveClient');
+        return apiNotify({ alertId });
+      },
       async updateAction(alertId, payload) {
         return postAction({ alertId, ...payload });
       },

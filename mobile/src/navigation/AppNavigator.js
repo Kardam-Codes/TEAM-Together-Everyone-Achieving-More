@@ -5,6 +5,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useAuth } from '../context/AuthContext';
 import { RoleSelectScreen } from '../screens/RoleSelectScreen';
@@ -21,12 +22,24 @@ const Tabs = createBottomTabNavigator();
 function MainTabs() {
   return (
     <Tabs.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarStyle: { backgroundColor: palette.surface, borderTopColor: palette.border },
+        tabBarStyle: { backgroundColor: palette.surface, borderTopColor: palette.border, height: 65, paddingBottom: 8, paddingTop: 8 },
         tabBarActiveTintColor: palette.primary,
         tabBarInactiveTintColor: palette.textMuted,
-      }}
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          if (route.name === 'Dashboard') iconName = focused ? 'home' : 'home-outline';
+          else if (route.name === 'Alerts') iconName = focused ? 'warning' : 'warning-outline';
+          else if (route.name === 'Actions') iconName = focused ? 'construct' : 'construct-outline';
+          else if (route.name === 'Analytics') iconName = focused ? 'analytics' : 'analytics-outline';
+          else if (route.name === 'Log') iconName = focused ? 'document-text' : 'document-text-outline';
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarLabel: ({ focused, color }) => (
+          <React.Fragment />
+        ),
+      })}
     >
       <Tabs.Screen name="Dashboard" component={DashboardScreen} />
       <Tabs.Screen name="Alerts" component={AlertsScreen} />

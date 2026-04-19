@@ -1,14 +1,15 @@
 // OWNER - HEET
-// PURPOSE - Alerts screen: list active/resolved alerts, show ack tracker, allow role-specific acknowledgement.
+// PURPOSE - Alerts screen: primary alert dashboard with high-urgency hierarchy.
 
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Animated, Pressable, ScrollView, Text, View } from 'react-native';
 
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useLive } from '../context/LiveContext';
 import { ROLE_LABELS } from '../constants/roles';
 import { styles } from '../styles/appStyles';
-import { colorForStatus, palette } from '../theme';
+import { colorForStatus, palette, bgColorForStatus, softColorForStatus } from '../theme';
 
 function severityLevel(severity) {
   if (severity === 'DANGER') return 'danger';
@@ -17,28 +18,100 @@ function severityLevel(severity) {
   return 'safe';
 }
 
-function AckRow({ label, ack }) {
-  const ok = Boolean(ack?.ackedAt);
+function AlertPill({ level }) {
+  const color = colorForStatus(level);
+  const bg = softColorForStatus(level);
+  const icon = level === 'danger' ? 'alert-circle' : level === 'warning' ? 'warning' : 'checkmark-circle';
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-      <Text style={{ color: palette.textMuted, fontWeight: '800' }}>{label}</Text>
-      <Text style={{ color: ok ? palette.safe : palette.warning, fontWeight: '900' }}>
-        {ok ? `Ack’d (${ack.responseSeconds}s)` : 'Pending'}
-      </Text>
+    <View style={[styles.alertPill, { backgroundColor: bg, borderColor: color }]}>
+      <Ionicons name={icon} size={18} color={color} />
+      <Text style={[styles.alertPillText, { color }]}>{level === 'danger' ? 'DANGER' : level === 'warning' ? 'WARNING' : 'SAFE'}</Text>
+    </View>
+  );
+}
+
+function CountdownTimer({ time }) {
+  const [pulseAnim] = useState(new Animated.Value(1));
+  
+  React.useEffect(() => {
+    let anim;
+    if (time) {
+      anim = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.1, duration: 500, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+        ])
+      );
+      anim.start();
+    }
+    return () => { anim?.stop(); };
+  }, [time]);
+
+  const color = palette.danger;
+  return (
+    <View style={[styles.countdownBox, { backgroundColor: palette.dangerBg, borderColor: palette.danger }]}>
+      <Ionicons name="time" size={32} color={color} style={styles.countdownIcon} />
+      <Text style={[styles.countdownValue, { color }]}>{time || '--:--'}</Text>
+      <Text style={[styles.countdownLabel, { color: palette.textMuted }]}>RISK WINDOW</Text>
+    </View>
+  );
+}
+
+function MetricCard({ icon, label, value, trend, status, color }) {
+  const statusColor = color || colorForStatus(status);
+  const bg = softColorForStatus(status);
+  const trendIcon = trend > 0 ? 'arrow-up' : trend < 0 ? 'arrow-down' : 'remove';
+  const trendColor = trend > 0 ? palette.danger : trend < 0 ? palette.safe : palette.textMuted;
+  return (
+    <View style={[styles.metricCard, { backgroundColor: bg }]}>
+      <View style={[styles.metricCardIcon, { backgroundColor: bg }]}>
+        <Ionicons name={icon} size={20} color={statusColor} />
+      </View>
+      <View style={styles.metricCardContent}>
+        <Text style={[styles.metricCardLabel, { color: palette.textMuted }]}>{label}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+          <Text style={[styles.metricCardValue, { color: statusColor }]}>{value}</Text>
+          <Ionicons name={trendIcon} size={14} color={trendColor} style={styles.metricCardTrend} />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function ReasonItem({ reason, expanded }) {
+  const icon = 'ellipse';
+  return (
+    <View style={styles.reasonItemNew}>
+      <Ionicons name={icon} size={10} color={palette.danger} style={styles.reasonIcon} />
+      <Text style={[styles.reasonContent, { color: palette.text }]}>{reason}</Text>
     </View>
   );
 }
 
 export function AlertsScreen() {
   const { role } = useAuth();
-  const { alertsActive, alertsResolved, acknowledge } = useLive();
+  const { alertsActive, alertsResolved, acknowledge, notifyAuthorities, mostSevereAlert, live } = useLive();
   const [tab, setTab] = useState('active');
+  const [reasonsExpanded, setReasonsExpanded] = useState(false);
+  const [buttonPressed, setButtonPressed] = useState(false);
+  const [dispatched, setDispatched] = useState(false);
 
   const list = tab === 'active' ? alertsActive : alertsResolved;
+  const activeAlert = mostSevereAlert;
 
-  const roleAckKey = role;
+  const handleAcknowledge = async () => {
+    if (!activeAlert || dispatched) return;
+    setButtonPressed(true);
+    try {
+      await acknowledge(activeAlert.id, role);
+      setDispatched(true);
+    } finally {
+      setTimeout(() => setButtonPressed(false), 200);
+    }
+  };
 
   const title = useMemo(() => (tab === 'active' ? 'Active Alerts' : 'Resolved Alerts'), [tab]);
+  const level = severityLevel(activeAlert?.severity);
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -75,56 +148,159 @@ export function AlertsScreen() {
         </View>
       </View>
 
-      <Text style={{ color: palette.textMuted, fontWeight: '800', marginTop: 2 }}>{title}</Text>
-
-      {list.map(alert => {
-        const level = severityLevel(alert.severity);
-        const ack = alert.acks?.[roleAckKey];
-        const canAck = tab === 'active' && !ack?.ackedAt;
-
-        return (
-          <View key={alert.id} style={[styles.card, { borderLeftWidth: 5, borderLeftColor: colorForStatus(level) }]}>
-            <View style={styles.rowBetween}>
-              <Text style={{ color: colorForStatus(level), fontWeight: '900' }}>{alert.severity}</Text>
-              <Text style={{ color: palette.textSubtle }}>{new Date(alert.createdAt).toLocaleTimeString()}</Text>
-            </View>
-
-            <Text style={{ color: palette.text, fontWeight: '900', marginTop: 10 }}>
-              {alert.triggerSnapshot?.cctv_camera_location || alert.corridorId}
+      {activeAlert && tab === 'active' ? (
+        <>
+          <AlertPill level={level} />
+          
+          <View style={[styles.card, { borderLeftWidth: 5, borderLeftColor: colorForStatus(level) }]}>
+            <Text style={{ color: palette.text, fontWeight: '900', fontSize: 22, marginBottom: 4 }}>
+              {activeAlert.triggerSnapshot?.cctv_camera_location || activeAlert.corridorId || 'Unknown Location'}
             </Text>
-            <Text style={{ color: palette.textMuted, marginTop: 4 }}>
-              Trigger: score {alert.triggerSnapshot?.pressure_score} · density {alert.triggerSnapshot?.density} · CPI {alert.triggerSnapshot?.cpi}
+            <Text style={{ color: palette.textMuted }}>
+              Alert #{activeAlert.id?.slice(-6) || '0000'} · {new Date(activeAlert.createdAt).toLocaleTimeString()}
             </Text>
-
-            {alert.predictedWindow ? (
-              <Text style={{ color: palette.textMuted, marginTop: 6 }}>
-                Risk window: {new Date(alert.predictedWindow.start).toLocaleTimeString()} – {new Date(alert.predictedWindow.end).toLocaleTimeString()}
-              </Text>
-            ) : (
-              <Text style={{ color: palette.textMuted, marginTop: 6 }}>No risk window detected.</Text>
-            )}
-
-            <View style={{ marginTop: 10 }}>
-              <AckRow label="Police" ack={alert.acks?.POLICE} />
-              <AckRow label="Temple Trust" ack={alert.acks?.TEMPLE_STAFF} />
-              <AckRow label="Transport" ack={alert.acks?.TRANSPORT} />
-            </View>
-
-            {canAck ? (
-              <Pressable
-                onPress={() => acknowledge(alert.id, role)}
-                style={[styles.primaryButton, { marginTop: 14 }]}
-              >
-                <Text style={styles.primaryButtonText}>Acknowledge</Text>
-                <Text style={styles.primaryButtonMeta}>As {ROLE_LABELS[role]}</Text>
-              </Pressable>
-            ) : null}
           </View>
-        );
-      })}
 
-      {!list.length ? <Text style={{ color: palette.textMuted }}>No alerts.</Text> : null}
+          <CountdownTimer 
+            time={activeAlert.predictedWindow 
+              ? `${new Date(activeAlert.predictedWindow.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+              : null
+            } 
+          />
+
+          <View style={[styles.card, { marginTop: 8 }]}>
+            <Text style={[styles.sectionTitle, { marginBottom: 12 }]}>Key Metrics</Text>
+            <MetricCard 
+              icon="people" 
+              label="Density" 
+              value={live?.cameras?.[activeAlert.corridorId]?.density?.toFixed(1) || activeAlert.triggerSnapshot?.density?.toFixed(1) || '--'} 
+              trend={1}
+              status={(live?.cameras?.[activeAlert.corridorId]?.density || activeAlert.triggerSnapshot?.density) > 3.5 ? 'danger' : 'warning'}
+            />
+            <MetricCard 
+              icon="trending-up" 
+              label="Pressure Score" 
+              value={Math.round(live?.cameras?.[activeAlert.corridorId]?.pressure_score || activeAlert.triggerSnapshot?.pressure_score) || '--'} 
+              trend={1}
+              status={(live?.cameras?.[activeAlert.corridorId]?.pressure_score || activeAlert.triggerSnapshot?.pressure_score) > 55 ? 'danger' : 'warning'}
+            />
+            <MetricCard 
+              icon="speedometer" 
+              label="CPI" 
+              value={live?.cameras?.[activeAlert.corridorId]?.cpi?.toFixed(1) || activeAlert.triggerSnapshot?.cpi?.toFixed(1) || '--'} 
+              trend={-1}
+              status="warning"
+            />
+            <MetricCard 
+              icon="exit" 
+              label="Exit Routes" 
+              value="4 open" 
+              trend={0}
+              status="safe"
+            />
+          </View>
+
+          <Pressable
+            onPress={() => setReasonsExpanded(!reasonsExpanded)}
+            style={[styles.card, { marginTop: 8 }]}
+          >
+            <View style={styles.rowBetween}>
+              <Text style={{ color: palette.text, fontWeight: '800' }}>Trigger Reasons</Text>
+              <Ionicons name={reasonsExpanded ? 'chevron-up' : 'chevron-down'} size={20} color={palette.textMuted} />
+            </View>
+            {!reasonsExpanded && (
+              <Text style={{ color: palette.textMuted, marginTop: 4 }}>Tap to expand</Text>
+            )}
+            {reasonsExpanded && (
+              <View style={{ marginTop: 12, gap: 8 }}>
+                <ReasonItem reason="Density above safe limit (3.5 persons/m²)" expanded />
+                <ReasonItem reason="Entry flow exceeds exit capacity" expanded />
+                <ReasonItem reason="Walking speed dropping below threshold" expanded />
+              </View>
+            )}
+          </Pressable>
+
+          {role === 'ADMIN' ? (
+            <View style={{ marginTop: 12 }}>
+              {activeAlert._authoritiesNotifiedAt ? (
+                <View style={[styles.card, { backgroundColor: palette.surfaceMuted, alignItems: 'center' }]}>
+                  <Ionicons name="checkmark-done-circle" size={32} color={palette.safe} />
+                  <Text style={{ color: palette.text, fontWeight: '900', marginTop: 8 }}>Authorities Notified</Text>
+                  <Text style={{ color: palette.textMuted, marginTop: 4, fontWeight: '800' }}>
+                    {[activeAlert.acks?.TEMPLE_STAFF?.ackedAt, activeAlert.acks?.POLICE?.ackedAt, activeAlert.acks?.TRANSPORT?.ackedAt].filter(Boolean).length} / 3 Authorities Acknowledged
+                  </Text>
+                </View>
+              ) : (
+                <Pressable
+                  onPress={async () => {
+                    if (buttonPressed) return;
+                    setButtonPressed(true);
+                    try {
+                      await notifyAuthorities(activeAlert.id);
+                    } finally {
+                      setButtonPressed(false);
+                    }
+                  }}
+                  style={[styles.primaryButtonNew, { marginTop: 8, backgroundColor: palette.primary }]}
+                >
+                  <Ionicons name="notifications" size={20} color="#FFFFFF" style={styles.primaryButtonIcon} />
+                  <Text style={[styles.primaryButtonLabel, { color: '#FFFFFF' }]}>NOTIFY AUTHORITIES</Text>
+                </Pressable>
+              )}
+            </View>
+          ) : (
+            <Pressable
+              onPress={handleAcknowledge}
+              disabled={dispatched}
+              style={[
+                styles.primaryButtonNew,
+                buttonPressed && styles.primaryButtonPressed,
+                dispatched ? styles.primaryButtonCompleted : null,
+                { marginTop: 8, backgroundColor: dispatched ? palette.safe : palette.primary }
+              ]}
+            >
+              <Ionicons 
+                name={dispatched ? 'checkmark-circle' : 'shield-checkmark'} 
+                size={20} 
+                color="#FFFFFF" 
+                style={styles.primaryButtonIcon} 
+              />
+              <Text style={[styles.primaryButtonLabel, { color: '#FFFFFF' }]}>
+                {dispatched ? 'ACKNOWLEDGED' : `ACKNOWLEDGE AS ${ROLE_LABELS[role]?.toUpperCase()}`}
+              </Text>
+            </Pressable>
+          )}
+        </>
+      ) : null}
+
+      {tab === 'resolved' && list.length > 0 && (
+        <>
+          <Text style={{ color: palette.textMuted, fontWeight: '800', marginTop: 8, marginBottom: 8 }}>{title}</Text>
+          {list.map(alert => {
+            const lvl = severityLevel(alert.severity);
+            return (
+              <View key={alert.id} style={[styles.card, { borderLeftWidth: 5, borderLeftColor: colorForStatus(lvl) }]}>
+                <View style={styles.rowBetween}>
+                  <Text style={{ color: colorForStatus(lvl), fontWeight: '900' }}>{alert.severity}</Text>
+                  <Text style={{ color: palette.textSubtle }}>{new Date(alert.createdAt).toLocaleTimeString()}</Text>
+                </View>
+                <Text style={{ color: palette.text, fontWeight: '900', marginTop: 10 }}>
+                  {alert.triggerSnapshot?.cctv_camera_location || alert.corridorId}
+                </Text>
+                <Text style={{ color: palette.textMuted, marginTop: 4 }}>
+                  Resolved at {alert.resolvedAt ? new Date(alert.resolvedAt).toLocaleTimeString() : 'N/A'}
+                </Text>
+              </View>
+            );
+          })}
+        </>
+      )}
+
+      {!list.length && (
+        <View style={[styles.card, { marginTop: 8 }]}>
+          <Text style={{ color: palette.textMuted, textAlign: 'center' }}>No alerts</Text>
+        </View>
+      )}
     </ScrollView>
   );
 }
-

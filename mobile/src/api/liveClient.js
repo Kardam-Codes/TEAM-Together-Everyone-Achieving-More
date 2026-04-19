@@ -80,6 +80,10 @@ export function postAck({ alertId, role }) {
   return jsonFetch(`/api/alerts/${alertId}/ack`, { method: 'POST', body: { role } });
 }
 
+export function notifyAuthorities({ alertId }) {
+  return jsonFetch(`/api/alerts/${alertId}/notify`, { method: 'POST' });
+}
+
 export function postAction({ alertId, role, status, notes }) {
   return jsonFetch(`/api/alerts/${alertId}/actions`, {
     method: 'POST',
