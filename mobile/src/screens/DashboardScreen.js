@@ -45,8 +45,15 @@ export function DashboardScreen() {
 
   const corridors = useMemo(() => {
     const temple = temples.find(t => t.id === templeId);
-    return temple?.corridors || [];
-  }, [temples, templeId]);
+    const list = temple?.corridors || [];
+    
+    // Sort so that designated roles come first
+    return [...list].sort((a, b) => {
+      const aMatch = a.roles?.includes(role) ? 1 : 0;
+      const bMatch = b.roles?.includes(role) ? 1 : 0;
+      return bMatch - aMatch;
+    });
+  }, [temples, templeId, role]);
 
   const severityUi = severityPill(globalSeverity);
   const score = selectedCamera?.pressure_score ?? 0;
@@ -76,11 +83,11 @@ export function DashboardScreen() {
           </View>
           <View style={{ flex: 1,borderWidth: 1, borderColor: palette.border, backgroundColor: palette.inactiveSoft, padding: 15, borderRadius: 10 }}>
             <Text style={{ color: palette.textMuted, fontSize: 12 }}>{t('activeAlerts')}</Text>
-            <Text style={{ color: palette.danger, fontSize: 24, fontWeight: '900' }}>{mostSevereAlert ? 1 : 0}</Text>
+            <Text style={{ color: palette.danger, fontSize: 24, fontWeight: '900' }}>{mostSevereAlert ? '1' : '0'}</Text>
           </View>
           <View style={{ flex: 1,borderWidth: 1, borderColor: palette.border, backgroundColor: palette.inactiveSoft, padding: 15, borderRadius: 10 }}>
             <Text style={{ color: palette.textMuted, fontSize: 12 }}>{t('activeCameras')}</Text>
-            <Text style={{ color: palette.safe, fontSize: 24, fontWeight: '900' }}>{corridors.length}</Text>
+            <Text style={{ color: palette.safe, fontSize: 24, fontWeight: '900' }}>{String(corridors.length)}</Text>
           </View>
         </View>
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
@@ -147,38 +154,49 @@ export function DashboardScreen() {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Multi-corridor map (tap to select)</Text>
-        <Text style={styles.sectionSubtitle}>List view for v1; can replace with schematic later.</Text>
+        <Text style={styles.sectionTitle}>CCTV Monitors (tap to select)</Text>
+        <Text style={styles.sectionSubtitle}>Sorted by designation for your role.</Text>
 
         <View style={{ marginTop: 12, gap: 10 }}>
           {corridors.map(c => {
             const cam = live?.cameras?.[c.tableName];
             const sev = cam?.severity || 'SAFE';
             const level = sev === 'DANGER' ? 'danger' : sev === 'WARNING' ? 'warning' : sev === 'WATCH' ? 'warning' : 'safe';
+            const isDesignated = c.roles?.includes(role);
+            const isSelected = c.tableName === tableName;
+
             return (
               <Pressable
                 key={c.id}
                 onPress={() => setTableName(c.tableName)}
                 style={{
                   padding: 12,
-                  borderRadius: 10,
-                  borderWidth: 1,
-                  borderLeftWidth: c.tableName === tableName ? 3 : 1,
-                  borderColor: c.tableName === tableName ? palette.primary : palette.border,
-                  borderLeftColor: c.tableName === tableName ? palette.primary : palette.border,
-                  backgroundColor: palette.surface,
+                  borderRadius: 12,
+                  borderWidth: isSelected ? 2 : 1,
+                  borderColor: isSelected ? palette.primary : isDesignated ? palette.primarySoft : palette.border,
+                  backgroundColor: isDesignated ? '#F0F7FF' : palette.surface,
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   alignItems: 'center',
+                  shadowColor: isDesignated ? palette.primary : '#000',
+                  shadowOpacity: isDesignated ? 0.05 : 0,
+                  elevation: isDesignated ? 2 : 0,
                 }}
               >
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: palette.text, fontWeight: '900' }}>{c.label}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={{ color: palette.text, fontWeight: '900', fontSize: 16 }}>{c.label}</Text>
+                    {isDesignated && (
+                      <View style={{ backgroundColor: palette.primary, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                        <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '900' }}>DESIGNATED</Text>
+                      </View>
+                    )}
+                  </View>
                   <Text style={{ color: palette.textMuted, marginTop: 3 }}>
-                    {c.offline ? 'Offline' : `Score ${cam?.pressure_score ?? 0} · ${sev}`}
+                    {c.offline ? 'Offline' : `Pressure ${cam?.pressure_score ?? 0} · ${sev}`}
                   </Text>
                 </View>
-                <View style={{ width: 10, height: 40, borderRadius: 5, backgroundColor: colorForStatus(level) }} />
+                <View style={{ width: 12, height: 40, borderRadius: 6, backgroundColor: colorForStatus(level) }} />
               </Pressable>
             );
           })}

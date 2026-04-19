@@ -56,7 +56,6 @@ export function LineChart({ values, dangerAt }) {
         data: Array(safeValues.length).fill(dangerAt),
         color: (opacity = 1) => palette.dangerSoft,
         strokeWidth: 2,
-        withScrollableDot: false,
       }
     ],
   };

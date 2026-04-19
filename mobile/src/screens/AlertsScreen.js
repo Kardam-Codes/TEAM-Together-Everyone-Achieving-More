@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Animated, Pressable, ScrollView, Text, View, ActivityIndicator } from 'react-native';
+import { Animated, Pressable, ScrollView, Text, View, ActivityIndicator, Alert } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -109,6 +109,8 @@ export function AlertsScreen() {
     try {
       await acknowledge(activeAlert.id, role);
       setDispatched(true);
+    } catch (err) {
+      Alert.alert('Error', err.message || 'Failed to acknowledge alert');
     } finally {
       setTimeout(() => setButtonPressed(false), 200);
     }
@@ -182,8 +184,8 @@ export function AlertsScreen() {
           </View>
 
           <CountdownTimer 
-            time={activeAlert.predictedWindow 
-              ? `${new Date(activeAlert.predictedWindow.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+            time={activeAlert.predictedWindow?.start
+              ? `${new Date(activeAlert.predictedWindow.start).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`
               : null
             } 
           />
@@ -208,8 +210,8 @@ export function AlertsScreen() {
               icon="speedometer" 
               label="CPI" 
               value={live?.cameras?.[activeAlert.corridorId]?.cpi?.toFixed(1) || activeAlert.triggerSnapshot?.cpi?.toFixed(1) || '--'} 
-              trend={-1}
-              status="warning"
+              trend={(live?.cameras?.[activeAlert.corridorId]?.cpi || activeAlert.triggerSnapshot?.cpi) > 5 ? 1 : 0}
+              status={(live?.cameras?.[activeAlert.corridorId]?.cpi || activeAlert.triggerSnapshot?.cpi) > 10 ? 'danger' : (live?.cameras?.[activeAlert.corridorId]?.cpi || activeAlert.triggerSnapshot?.cpi) > 5 ? 'warning' : 'safe'}
             />
             <MetricCard 
               icon="exit" 
@@ -253,7 +255,13 @@ export function AlertsScreen() {
                   <Ionicons name="checkmark-done-circle" size={32} color={palette.safe} />
                   <Text style={{ color: palette.text, fontWeight: '900', marginTop: 8 }}>Authorities Notified</Text>
                   <Text style={{ color: palette.textMuted, marginTop: 4, fontWeight: '800' }}>
-                    {[activeAlert.acks?.TEMPLE_AGENCY?.ackedAt, activeAlert.acks?.POLICE?.ackedAt, activeAlert.acks?.TRANSPORT?.ackedAt].filter(Boolean).length} / 3 Authorities Acknowledged
+                    {String(
+                      [
+                        activeAlert.acks?.TEMPLE_AGENCY?.ackedAt, 
+                        activeAlert.acks?.POLICE?.ackedAt, 
+                        activeAlert.acks?.TRANSPORT?.ackedAt
+                      ].filter(Boolean).length
+                    )} / 3 Authorities Acknowledged
                   </Text>
                 </View>
               ) : (
@@ -263,6 +271,8 @@ export function AlertsScreen() {
                     setButtonPressed(true);
                     try {
                       await notifyAuthorities(activeAlert.id);
+                    } catch (err) {
+                      Alert.alert('Error', err.message || 'Failed to notify authorities');
                     } finally {
                       setButtonPressed(false);
                     }

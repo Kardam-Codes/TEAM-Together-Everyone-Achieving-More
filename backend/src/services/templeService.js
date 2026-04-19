@@ -32,14 +32,16 @@ function ensureSomnathCorridorsFromManifest() {
     if (existing) {
       existing.offline = false;
       if (!existing.label) existing.label = entry.cctv_camera_location || tableName;
+      if (entry.roles) existing.roles = entry.roles;
       continue;
     }
-
+    
     createCorridor({
       templeId: "somnath",
       tableName,
       label: entry.cctv_camera_location || tableName,
       offline: false,
+      roles: entry.roles || [],
     });
   }
 }

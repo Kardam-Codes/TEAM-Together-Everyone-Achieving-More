@@ -11,6 +11,7 @@ import {
   postAck,
   postAction,
   setReplayControl,
+  notifyAuthorities,
 } from '../api/liveClient';
 import { getStoredTableName, getStoredTempleId, setStoredTableName, setStoredTempleId } from '../services/storage';
 
@@ -194,8 +195,7 @@ export function LiveProvider({ children }) {
         return postAck({ alertId, role });
       },
       async notifyAuthorities(alertId) {
-        const { notifyAuthorities: apiNotify } = require('../api/liveClient');
-        return apiNotify({ alertId });
+        return notifyAuthorities({ alertId });
       },
       async updateAction(alertId, payload) {
         return postAction({ alertId, ...payload });

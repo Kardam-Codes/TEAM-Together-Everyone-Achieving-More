@@ -49,6 +49,7 @@ function createCorridor({
   label,
   mapPosition,
   offline = true,
+  roles = [],
 } = {}) {
   const id = newId("corridor");
   const corridor = {
@@ -58,6 +59,7 @@ function createCorridor({
     label: String(label || tableName || id),
     mapPosition: mapPosition || null,
     offline: Boolean(offline),
+    roles: Array.isArray(roles) ? roles : [],
   };
   store.corridors.push(corridor);
   return corridor;

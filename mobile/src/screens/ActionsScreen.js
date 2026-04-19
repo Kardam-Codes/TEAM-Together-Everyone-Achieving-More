@@ -2,7 +2,7 @@
 // PURPOSE - Actions screen: show current alert context + role panels to update action status.
 
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View, ActivityIndicator } from 'react-native';
+import { Pressable, ScrollView, Text, View, ActivityIndicator, Alert } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -30,23 +30,22 @@ function Panel({ title, expanded, onToggle, children, highlight, icon }) {
 }
 
 function ActionButtons({ onSet, primaryLabel, secondaryLabel, tertiaryLabel, currentStatus }) {
-  const initialCompleted =
+  const [loading, setLoading] = useState(null);
+  const [error, setError] = useState(null);
+
+  const completed =
     currentStatus === primaryLabel   ? 'primary'   :
     currentStatus === secondaryLabel ? 'secondary' :
     currentStatus === tertiaryLabel  ? 'tertiary'  : null;
 
-  const [completed, setCompleted] = useState(initialCompleted);
-  const [loading, setLoading] = useState(null);
-  const [error, setError] = useState(null);
-
   async function handlePress(slot, label) {
+    if (loading) return;
     setLoading(slot);
     setError(null);
     try {
       await onSet(label);
-      setCompleted(slot);
     } catch (e) {
-      setError('Update failed. Try again.');
+      setError(e?.message || 'Update failed. Try again.');
     } finally {
       setLoading(null);
     }
@@ -56,7 +55,7 @@ function ActionButtons({ onSet, primaryLabel, secondaryLabel, tertiaryLabel, cur
     <View style={{ gap: 10 }}>
       <Pressable
         onPress={() => handlePress('primary', primaryLabel)}
-        disabled={completed === 'primary' || loading}
+        disabled={completed === 'primary' || loading === 'primary'}
         style={[
           styles.primaryButton,
           { backgroundColor: completed === 'primary' ? palette.safe : palette.primary }
@@ -66,7 +65,7 @@ function ActionButtons({ onSet, primaryLabel, secondaryLabel, tertiaryLabel, cur
           <ActivityIndicator size="small" color="#FFFFFF" />
         ) : (
           <Ionicons
-            name={completed === 'primary' ? 'checkmark-circle' : 'shield-checkmark'}
+            name={completed === 'primary' ? 'checkmark-circle' : 'shield'}
             size={20}
             color="#FFFFFF"
           />
@@ -78,7 +77,7 @@ function ActionButtons({ onSet, primaryLabel, secondaryLabel, tertiaryLabel, cur
       {secondaryLabel ? (
         <Pressable
           onPress={() => handlePress('secondary', secondaryLabel)}
-          disabled={completed === 'secondary' || loading}
+          disabled={completed === 'secondary' || loading === 'secondary'}
           style={[
             styles.secondaryButton,
             { borderColor: palette.border, borderWidth: 1 }
@@ -88,7 +87,7 @@ function ActionButtons({ onSet, primaryLabel, secondaryLabel, tertiaryLabel, cur
             <ActivityIndicator size="small" color={palette.text} />
           ) : (
             <Ionicons
-              name={completed === 'secondary' ? 'checkmark-circle' : 'car'}
+              name={completed === 'secondary' ? 'checkmark-circle' : 'bus'}
               size={16}
               color={completed === 'secondary' ? palette.safe : palette.text}
             />
@@ -101,7 +100,7 @@ function ActionButtons({ onSet, primaryLabel, secondaryLabel, tertiaryLabel, cur
       {tertiaryLabel ? (
         <Pressable
           onPress={() => handlePress('tertiary', tertiaryLabel)}
-          disabled={completed === 'tertiary' || loading}
+          disabled={completed === 'tertiary' || loading === 'tertiary'}
           style={[
             styles.secondaryButton,
             { borderColor: palette.border, borderWidth: 1 }
@@ -111,7 +110,7 @@ function ActionButtons({ onSet, primaryLabel, secondaryLabel, tertiaryLabel, cur
             <ActivityIndicator size="small" color={palette.text} />
           ) : (
             <Ionicons
-              name={completed === 'tertiary' ? 'checkmark-circle' : 'location'}
+              name={completed === 'tertiary' ? 'checkmark-circle' : 'pin'}
               size={16}
               color={completed === 'tertiary' ? palette.safe : palette.text}
             />
@@ -184,7 +183,12 @@ export function ActionsScreen() {
   }
 
   async function setStatus(forRole, status) {
-    await updateAction(mostSevereAlert.id, { role: forRole, status });
+    try {
+      await updateAction(mostSevereAlert.id, { role: forRole, status });
+    } catch (err) {
+      Alert.alert('Error', err?.message || 'Failed to update action');
+      throw err;
+    }
   }
 
   const contextLabel = `${mostSevereAlert.severity} — ${mostSevereAlert.triggerSnapshot?.cctv_camera_location || mostSevereAlert.corridorId}`;

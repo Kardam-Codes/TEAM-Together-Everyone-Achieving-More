@@ -118,6 +118,7 @@ function updateAlertsFromLiveStates({ templeId, corridorStates }) {
           status: state.status,
           pressure_score: state.pressure_score,
           severity: state.severity,
+          reasons: state.reasons || [],
         },
         predictedWindow: predictedWindowFromCrushIn({ crush_in: state.crush_in }),
         acks: defaultAcks(),
@@ -151,7 +152,11 @@ function updateAlertsFromLiveStates({ templeId, corridorStates }) {
       existing.updatedAt = tickAt;
       existing.severity = state.severity;
       existing.peakPressureScore = Math.max(existing.peakPressureScore || 0, state.pressure_score || 0);
-      existing.predictedWindow = predictedWindowFromCrushIn({ crush_in: state.crush_in });
+      
+      // Stabilize predicted window: only update if it was null or if crush_in is significantly different
+      if (!existing.predictedWindow && state.crush_in) {
+        existing.predictedWindow = predictedWindowFromCrushIn({ crush_in: state.crush_in });
+      }
 
       if (state.severity === "DANGER" && existing._notifiedDanger !== true) {
         existing._notifiedDanger = true;

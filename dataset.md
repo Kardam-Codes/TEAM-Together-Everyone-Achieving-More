@@ -13,7 +13,7 @@ All dataset files are in the `dataset/` folder.
 | `corridor_b_queue_lane.csv` | Corridor B Queue Lane | 7200 | Queue-lane density and pressure monitoring |
 | `corridor_c_prasad_side.csv` | Corridor C Prasad Side | 7200 | Prasad-side corridor monitoring |
 | `corridor_d_exit_return.csv` | Corridor D Exit Return | 7200 | Exit/return corridor monitoring |
-| `temple_entry_dats.csv` | Temple Entry Dats | 7200 | Temple entry telemetry |
+| `temple_entry_gate.csv` | Temple Entry Gate | 7200 | Temple entry telemetry |
 | `somnath_temple_all_cctv_locations.csv` | Combined locations | 43200 | Combined dataset for all CCTV locations |
 | `table_manifest.json` | Metadata | - | Lists table names, camera locations, files, and row counts |
 | `table_schema.sql` | SQL schema | - | SQLite-compatible schema for loading the CSV tables |
@@ -69,7 +69,7 @@ files = [
     "corridor_b_queue_lane.csv",
     "corridor_c_prasad_side.csv",
     "corridor_d_exit_return.csv",
-    "temple_entry_dats.csv",
+    "temple_entry_gate.csv",
 ]
 
 frames = [

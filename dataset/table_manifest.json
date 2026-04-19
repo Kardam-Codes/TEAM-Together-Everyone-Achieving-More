@@ -3,36 +3,42 @@
     "table_name": "main_entry_gate",
     "cctv_camera_location": "Main Entry Gate",
     "csv_file": "main_entry_gate.csv",
-    "rows": 7200
+    "rows": 7200,
+    "roles": ["ADMIN", "TEMPLE_AGENCY", "POLICE"]
   },
   {
     "table_name": "corridor_a_north",
     "cctv_camera_location": "Corridor A North",
     "csv_file": "corridor_a_north.csv",
-    "rows": 7200
+    "rows": 7200,
+    "roles": ["ADMIN", "POLICE"]
   },
   {
     "table_name": "corridor_b_queue_lane",
     "cctv_camera_location": "Corridor B Queue Lane",
     "csv_file": "corridor_b_queue_lane.csv",
-    "rows": 7200
+    "rows": 7200,
+    "roles": ["ADMIN", "TEMPLE_AGENCY"]
   },
   {
     "table_name": "corridor_c_prasad_side",
     "cctv_camera_location": "Corridor C Prasad Side",
     "csv_file": "corridor_c_prasad_side.csv",
-    "rows": 7200
+    "rows": 7200,
+    "roles": ["ADMIN", "TEMPLE_AGENCY"]
   },
   {
     "table_name": "corridor_d_exit_return",
     "cctv_camera_location": "Corridor D Exit Return",
     "csv_file": "corridor_d_exit_return.csv",
-    "rows": 7200
+    "rows": 7200,
+    "roles": ["ADMIN", "TRANSPORT"]
   },
   {
-    "table_name": "temple_entry_dats",
-    "cctv_camera_location": "Temple Entry Dats",
-    "csv_file": "temple_entry_dats.csv",
-    "rows": 7200
+    "table_name": "temple_entry_gate",
+    "cctv_camera_location": "Temple Entry Gate",
+    "csv_file": "temple_entry_gate.csv",
+    "rows": 7200,
+    "roles": ["ADMIN", "POLICE", "TEMPLE_AGENCY"]
   }
 ]

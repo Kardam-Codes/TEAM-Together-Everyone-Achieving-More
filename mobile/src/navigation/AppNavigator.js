@@ -37,9 +37,7 @@ function MainTabs() {
           else if (route.name === 'Settings') iconName = focused ? 'settings' : 'settings-outline';
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarLabel: ({ focused, color }) => (
-          <React.Fragment />
-        ),
+        tabBarShowLabel: false,
       })}
     >
       <Tabs.Screen name="Dashboard" component={DashboardScreen} />
