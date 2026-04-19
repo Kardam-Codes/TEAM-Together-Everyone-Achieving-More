@@ -53,10 +53,20 @@ function CountdownTimer({ time }) {
 
   const color = palette.danger;
   return (
-    <View style={[styles.countdownBox, { backgroundColor: palette.dangerBg, borderColor: palette.danger }]}>
-      <Ionicons name="time" size={32} color={color} style={styles.countdownIcon} />
-      <Text style={[styles.countdownValue, { color }]}>{time || '--:--'}</Text>
-      <Text style={[styles.countdownLabel, { color: palette.textMuted }]}>RISK WINDOW</Text>
+    <View style={[
+      styles.countdownBox, 
+      { 
+        backgroundColor: palette.dangerBg, 
+        borderColor: palette.danger,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        gap: 8,
+        borderRadius: 10
+      }
+    ]}>
+      <Ionicons name="time" size={24} color={color} />
+      <Text style={[styles.countdownValue, { color, fontSize: 32 }]}>{time || '--:--'}</Text>
+      <Text style={[styles.countdownLabel, { color: palette.textMuted, fontSize: 11 }]}>RISK WINDOW</Text>
     </View>
   );
 }
