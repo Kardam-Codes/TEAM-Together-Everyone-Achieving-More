@@ -45,14 +45,26 @@ export function DashboardScreen() {
 
   const corridors = useMemo(() => {
     const temple = temples.find(t => t.id === templeId);
-    const list = temple?.corridors || [];
+    let list = temple?.corridors || [];
     
-    // Sort so that designated roles come first
-    return [...list].sort((a, b) => {
-      const aMatch = a.roles?.includes(role) ? 1 : 0;
-      const bMatch = b.roles?.includes(role) ? 1 : 0;
+    // Fallback designations if backend is stale
+    const ROLE_MAP = {
+      POLICE: ['main_entry_gate', 'corridor_a_north', 'temple_entry_gate'],
+      TRANSPORT: ['corridor_d_exit_return'],
+      TEMPLE_AGENCY: ['main_entry_gate', 'corridor_b_queue_lane', 'corridor_c_prasad_side', 'temple_entry_gate'],
+      ADMIN: ['main_entry_gate', 'corridor_a_north', 'corridor_b_queue_lane', 'corridor_c_prasad_side', 'corridor_d_exit_return', 'temple_entry_gate']
+    };
+
+    const sorted = [...list].sort((a, b) => {
+      const aRoles = a.roles || ROLE_MAP[role] || [];
+      const bRoles = b.roles || ROLE_MAP[role] || [];
+      
+      const aMatch = aRoles.includes(role) || (ROLE_MAP[role]?.includes(a.tableName)) ? 1 : 0;
+      const bMatch = bRoles.includes(role) || (ROLE_MAP[role]?.includes(b.tableName)) ? 1 : 0;
       return bMatch - aMatch;
     });
+
+    return sorted;
   }, [temples, templeId, role]);
 
   const severityUi = severityPill(globalSeverity);
@@ -160,10 +172,17 @@ export function DashboardScreen() {
         <View style={{ marginTop: 12, gap: 10 }}>
           {corridors.map(c => {
             const cam = live?.cameras?.[c.tableName];
-            const sev = cam?.severity || 'SAFE';
-            const level = sev === 'DANGER' ? 'danger' : sev === 'WARNING' ? 'warning' : sev === 'WATCH' ? 'warning' : 'safe';
-            const isDesignated = c.roles?.includes(role);
+            const ROLE_MAP = {
+              POLICE: ['main_entry_gate', 'corridor_a_north', 'temple_entry_gate'],
+              TRANSPORT: ['corridor_d_exit_return'],
+              TEMPLE_AGENCY: ['main_entry_gate', 'corridor_b_queue_lane', 'corridor_c_prasad_side', 'temple_entry_gate'],
+              ADMIN: ['main_entry_gate', 'corridor_a_north', 'corridor_b_queue_lane', 'corridor_c_prasad_side', 'corridor_d_exit_return', 'temple_entry_gate']
+            };
+            const isDesignated = role !== 'ADMIN' && (c.roles?.includes(role) || ROLE_MAP[role]?.includes(c.tableName));
             const isSelected = c.tableName === tableName;
+            const camSeverity = severityPill(cam?.severity);
+            const level = camSeverity.level;
+            const sev = camSeverity.label;
 
             return (
               <Pressable
@@ -183,8 +202,8 @@ export function DashboardScreen() {
                   elevation: isDesignated ? 2 : 0,
                 }}
               >
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ flex: 1, marginRight: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                     <Text style={{ color: palette.text, fontWeight: '900', fontSize: 16 }}>{c.label}</Text>
                     {isDesignated && (
                       <View style={{ backgroundColor: palette.primary, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>

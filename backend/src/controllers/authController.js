@@ -29,7 +29,7 @@ async function login(req, res) {
     const { username, password } = req.body;
     const user = findUserByUsername(username);
     if (!user) {
-      return res.status(401).json({ error: 'Invalid username or password' });
+      return res.status(401).json({ error: 'Username not found' });
     }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
