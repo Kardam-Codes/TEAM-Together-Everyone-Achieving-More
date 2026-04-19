@@ -144,7 +144,7 @@ export function AnalyticsScreen() {
               </View>
               <View style={styles.metricRow}>
                 <View style={styles.metricLabelWrap}>
-                  <Ionicons name="video" size={16} color={palette.textMuted} />
+                  <Ionicons name="videocam" size={16} color={palette.textMuted} />
                   <Text style={styles.metricRowLabel}>Camera Status</Text>
                 </View>
                 <Text style={[styles.metricRowValue, { color: palette.safe }]}>ONLINE</Text>
