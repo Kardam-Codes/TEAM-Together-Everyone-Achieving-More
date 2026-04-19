@@ -1,0 +1,23 @@
+{
+  "translation": {
+    "dashboard": "Dashboard",
+    "policeDashboard": "Police Dashboard",
+    "transportDashboard": "Transport Dashboard",
+    "adminDashboard": "Admin Dashboard",
+    "agencyDashboard": "Agency Dashboard",
+    "settings": "Settings",
+    "logout": "Logout",
+    "language": "Language",
+    "darkMode": "Dark Mode",
+    "crowdDensity": "Crowd Density",
+    "activeAlerts": "Active Alerts",
+    "activeCameras": "Active Cameras",
+    "addCamera": "Add Camera",
+    "save": "Save",
+    "username": "Username",
+    "password": "Password",
+    "login": "Login",
+    "signup": "Sign Up",
+    "role": "Role"
+  }
+}

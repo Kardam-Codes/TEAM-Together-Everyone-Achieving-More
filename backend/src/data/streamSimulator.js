@@ -169,6 +169,38 @@ class StreamSimulator extends EventEmitter {
     this.emit("start", { tableNames: this._tableNames, emitIntervalMs: this._emitIntervalMs });
   }
 
+  pause() {
+    if (!this._timer) return;
+    clearInterval(this._timer);
+    this._timer = null;
+    this.emit("pause", { index: this._index });
+  }
+
+  resume() {
+    if (this._timer) return;
+    this.start();
+    this.emit("resume", { index: this._index });
+  }
+
+  setSpeed(emitIntervalMs) {
+    const next = Number(emitIntervalMs);
+    if (!Number.isFinite(next) || next <= 0) return;
+    this._emitIntervalMs = Math.round(next);
+    const running = Boolean(this._timer);
+    if (running) {
+      this.pause();
+      this.start();
+    }
+    this.emit("speed", { emitIntervalMs: this._emitIntervalMs });
+  }
+
+  seek(index) {
+    const next = Number(index);
+    if (!Number.isFinite(next) || next < 0) return;
+    this._index = Math.floor(next);
+    this.emit("seek", { index: this._index });
+  }
+
   stop() {
     if (!this._timer) return;
     clearInterval(this._timer);
@@ -211,6 +243,10 @@ module.exports = {
   initStream: (opts) => streamSimulator.init(opts),
   initAllStreams: (opts) => streamSimulator.initAll(opts),
   startStream: () => streamSimulator.start(),
+  pauseStream: () => streamSimulator.pause(),
+  resumeStream: () => streamSimulator.resume(),
+  setStreamSpeed: (ms) => streamSimulator.setSpeed(ms),
+  seekStream: (index) => streamSimulator.seek(index),
   stopStream: () => streamSimulator.stop(),
   getLatestRow: (tableName) => streamSimulator.getLatestRow(tableName),
   getLatestRows: () => streamSimulator.getLatestRows(),

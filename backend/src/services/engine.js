@@ -1,5 +1,5 @@
 // OWNER - KARDAM
-// PURPOSE - Combine stream + CPI + prediction + classification into one stable integration contract: getCurrentState().
+// PURPOSE - Combine stream + CPI + prediction + classification into stable integration contracts for single and all CCTV states.
 
 const { getLatestRow, getLatestRows, getStreamMeta } = require("../data/streamSimulator");
 const { calculateCPI } = require("../utils/calculateCPI");
@@ -88,6 +88,11 @@ function computeStateForTable(tableName, current, options = {}) {
     crush_in: prediction.crush_in,
     density: round(density, 2),
     status: classification.status,
+    reasons: [
+      density > 3.5 ? 'Density above safe limit (3.5 persons/m²)' : null,
+      prediction.risk === 'HIGH' ? 'Crush risk predicted 8-12m ahead' : null,
+      classification.status === 'CRUSH_BUILDUP' ? 'Continuous crowd buildup detected' : null,
+    ].filter(Boolean),
   };
 }
 

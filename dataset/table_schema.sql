@@ -22,4 +22,4 @@ CREATE TABLE corridor_a_north AS SELECT * FROM main_entry_gate WHERE 0;
 CREATE TABLE corridor_b_queue_lane AS SELECT * FROM main_entry_gate WHERE 0;
 CREATE TABLE corridor_c_prasad_side AS SELECT * FROM main_entry_gate WHERE 0;
 CREATE TABLE corridor_d_exit_return AS SELECT * FROM main_entry_gate WHERE 0;
-CREATE TABLE temple_entry_dats AS SELECT * FROM main_entry_gate WHERE 0;
+CREATE TABLE temple_entry_gate AS SELECT * FROM main_entry_gate WHERE 0;

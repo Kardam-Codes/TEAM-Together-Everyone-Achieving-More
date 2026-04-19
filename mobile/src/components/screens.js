@@ -65,7 +65,8 @@ export function AlertScreen({ data, onActions, zones, onSelectZone }) {
   );
 }
 
-export function ActionsScreen({ data }) {
+// DEPRECATED: Use ActionsScreen from ../screens/ActionsScreen.js instead
+export function LegacyActionsScreen({ data }) {
   return (
     <ScrollView contentContainerStyle={styles.scrollContent}>
       <View style={styles.card}>

@@ -2,15 +2,19 @@
 // PURPOSE - Shared UI pieces used by the mobile alert app screens.
 
 import React, { useMemo } from 'react';
-import { Pressable, Text, View } from 'react-native';
-
+import { Pressable, Text, View, Dimensions } from 'react-native';
+import { LineChart as RNLineChart } from 'react-native-chart-kit';
+import { Ionicons } from '@expo/vector-icons';
 import { tabs } from '../data/incidentData';
 import { styles } from '../styles/appStyles';
 import { colorForStatus, palette, softColorForStatus } from '../theme';
 
 export function StatusPill({ level, label }) {
   return (
-    <View style={[styles.statusPill, { backgroundColor: softColorForStatus(level), borderColor: colorForStatus(level) }]}>
+    <View 
+      accessibilityLabel={label}
+      style={[styles.statusPill, { backgroundColor: softColorForStatus(level), borderColor: colorForStatus(level) }]}
+    >
       <View style={[styles.statusDot, { backgroundColor: colorForStatus(level) }]} />
       <Text style={[styles.statusText, { color: colorForStatus(level) }]}>{label}</Text>
     </View>
@@ -30,56 +34,97 @@ export function MetricRow({ label, value, status }) {
 }
 
 export function LineChart({ values, dangerAt }) {
-  const points = useMemo(() => {
-    const min = Math.min(...values, 0);
-    const max = Math.max(...values, dangerAt);
-    const range = max - min || 1;
+  const chartWidth = Dimensions.get('window').width - 64;
+  const chartHeight = 120;
 
-    return values.map((value, index) => ({
-      left: `${(index / (values.length - 1)) * 100}%`,
-      bottom: `${((value - min) / range) * 76 + 10}%`,
-      danger: value >= dangerAt,
-      value,
-    }));
-  }, [dangerAt, values]);
+  // react-native-chart-kit requires at least 2 data points to render properly
+  let validValues = values && values.length > 0 ? values : [0];
+  if (validValues.length === 1) {
+    validValues = [validValues[0], validValues[0]];
+  }
+  const safeValues = validValues.map(v => (Number.isFinite(v) ? v : 0));
+  
+  const data = {
+    labels: safeValues.map(() => ''),
+    datasets: [
+      {
+        data: safeValues,
+        color: (opacity = 1) => palette.primary,
+        strokeWidth: 3,
+      },
+      {
+        data: Array(safeValues.length).fill(dangerAt),
+        color: (opacity = 1) => palette.dangerSoft,
+        strokeWidth: 2,
+      }
+    ],
+  };
+
+  const chartConfig = {
+    backgroundColor: palette.surface,
+    backgroundGradientFrom: palette.surface,
+    backgroundGradientTo: palette.surface,
+    fillShadowGradientFrom: palette.primary,
+    fillShadowGradientFromOpacity: 0.2,
+    fillShadowGradientTo: palette.surface,
+    fillShadowGradientToOpacity: 0,
+    color: (opacity = 1) => palette.primary,
+    strokeWidth: 3,
+    useShadowColorFromDataset: false,
+    propsForDots: { r: '0' },
+    propsForBackgroundLines: { stroke: 'transparent' }
+  };
 
   return (
-    <View style={styles.chart}>
-      <View style={styles.thresholdLine} />
-      <Text style={styles.thresholdText}>safe limit</Text>
-      {points.map((point, index) => (
-        <View
-          key={`${point.value}-${index}`}
-          style={[
-            styles.chartPoint,
-            {
-              left: point.left,
-              bottom: point.bottom,
-              backgroundColor: point.danger ? palette.danger : palette.primary,
-            },
-          ]}
-        />
-      ))}
-      <View style={styles.chartLabels}>
-        <Text style={styles.chartLabel}>-8 min</Text>
-        <Text style={styles.chartLabel}>now</Text>
-      </View>
+    <View style={{ marginTop: 8, marginBottom: 8, alignItems: 'center' }}>
+      <RNLineChart
+        data={data}
+        width={chartWidth}
+        height={chartHeight}
+        chartConfig={chartConfig}
+        bezier
+        style={{ paddingRight: 0, paddingLeft: 0 }}
+        withDots={false}
+        withInnerLines={false}
+        withOuterLines={false}
+        withVerticalLines={false}
+        withHorizontalLines={false}
+        withVerticalLabels={false}
+        withHorizontalLabels={false}
+        fromZero={true}
+      />
     </View>
   );
 }
 
 export function BottomNavigation({ activeTab, onChange }) {
+  // LEGACY — not mounted by active navigator
+  const tabIcons = {
+    alert: 'warning',
+    actions: 'construct',
+    metrics: 'analytics',
+  };
+
   return (
     <View style={styles.bottomNav}>
-      {tabs.map(tab => (
-        <Pressable
-          key={tab.id}
-          onPress={() => onChange(tab.id)}
-          style={[styles.navItem, activeTab === tab.id && styles.navItemActive]}
-        >
-          <Text style={[styles.navLabel, activeTab === tab.id && styles.navLabelActive]}>{tab.label}</Text>
-        </Pressable>
-      ))}
+      {tabs.map(tab => {
+        const isActive = activeTab === tab.id;
+        return (
+          <Pressable
+            key={tab.id}
+            onPress={() => onChange(tab.id)}
+            style={[styles.navItem, isActive ? styles.navItemActive : null]}
+          >
+            <Ionicons 
+              name={tabIcons[tab.id] || 'ellipse'} 
+              size={20} 
+              color={isActive ? palette.primary : palette.textMuted} 
+              style={{ marginBottom: 2 }}
+            />
+            <Text style={[styles.navLabel, isActive && styles.navLabelActive]}>{tab.label}</Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
