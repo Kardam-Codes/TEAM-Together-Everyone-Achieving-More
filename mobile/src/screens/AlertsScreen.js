@@ -1,8 +1,5 @@
-// OWNER - HEET
-// PURPOSE - Alerts screen: primary alert dashboard with high-urgency hierarchy.
-
 import React, { useMemo, useState } from 'react';
-import { Animated, Pressable, ScrollView, Text, View } from 'react-native';
+import { Animated, Pressable, ScrollView, Text, View, ActivityIndicator } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -18,14 +15,21 @@ function severityLevel(severity) {
   return 'safe';
 }
 
-function AlertPill({ level }) {
+function AlertPill({ level, priority }) {
   const color = colorForStatus(level);
   const bg = softColorForStatus(level);
   const icon = level === 'danger' ? 'alert-circle' : level === 'warning' ? 'warning' : 'checkmark-circle';
   return (
-    <View style={[styles.alertPill, { backgroundColor: bg, borderColor: color }]}>
-      <Ionicons name={icon} size={18} color={color} />
-      <Text style={[styles.alertPillText, { color }]}>{level === 'danger' ? 'DANGER' : level === 'warning' ? 'WARNING' : 'SAFE'}</Text>
+    <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+      <View style={[styles.alertPill, { backgroundColor: bg, borderColor: color }]}>
+        <Ionicons name={icon} size={18} color={color} />
+        <Text style={[styles.alertPillText, { color }]}>{level === 'danger' ? 'DANGER' : level === 'warning' ? 'WARNING' : 'SAFE'}</Text>
+      </View>
+      {priority && (
+        <View style={[styles.alertPill, { backgroundColor: palette.surfaceDark, borderColor: palette.border }]}>
+          <Text style={[styles.alertPillText, { color: priority === 'High' ? palette.danger : palette.warning }]}>{priority} Priority</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -90,7 +94,7 @@ function ReasonItem({ reason, expanded }) {
 
 export function AlertsScreen() {
   const { role } = useAuth();
-  const { alertsActive, alertsResolved, acknowledge, notifyAuthorities, mostSevereAlert, live } = useLive();
+  const { alertsActive, alertsResolved, acknowledge, notifyAuthorities, mostSevereAlert, live, liveError } = useLive();
   const [tab, setTab] = useState('active');
   const [reasonsExpanded, setReasonsExpanded] = useState(false);
   const [buttonPressed, setButtonPressed] = useState(false);
@@ -112,11 +116,20 @@ export function AlertsScreen() {
 
   const title = useMemo(() => (tab === 'active' ? 'Active Alerts' : 'Resolved Alerts'), [tab]);
   const level = severityLevel(activeAlert?.severity);
+  const priority = activeAlert?.severity === 'DANGER' ? 'High' : activeAlert?.severity === 'WARNING' ? 'Medium' : 'Low';
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContent}>
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Alerts</Text>
+        <View style={styles.rowBetween}>
+          <Text style={styles.sectionTitle}>Alerts</Text>
+          {liveError && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <ActivityIndicator size="small" color={palette.warning} />
+              <Text style={{ color: palette.warning, fontSize: 12, fontWeight: 'bold' }}>Reconnecting...</Text>
+            </View>
+          )}
+        </View>
         <Text style={styles.sectionSubtitle}>Role: {ROLE_LABELS[role]}</Text>
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
           <Pressable
@@ -148,9 +161,15 @@ export function AlertsScreen() {
         </View>
       </View>
 
-      {activeAlert && tab === 'active' ? (
+      {!live && liveError ? (
+        <View style={[styles.card, { alignItems: 'center', paddingVertical: 40 }]}>
+          <ActivityIndicator size="large" color={palette.primary} />
+          <Text style={{ color: palette.text, marginTop: 15, fontWeight: 'bold' }}>Fetching real-time data...</Text>
+          <Text style={{ color: palette.danger, marginTop: 5, textAlign: 'center' }}>{liveError}</Text>
+        </View>
+      ) : activeAlert && tab === 'active' ? (
         <>
-          <AlertPill level={level} />
+          <AlertPill level={level} priority={priority} />
           
           <View style={[styles.card, { borderLeftWidth: 5, borderLeftColor: colorForStatus(level) }]}>
             <Text style={{ color: palette.text, fontWeight: '900', fontSize: 22, marginBottom: 4 }}>
@@ -227,7 +246,7 @@ export function AlertsScreen() {
                   <Ionicons name="checkmark-done-circle" size={32} color={palette.safe} />
                   <Text style={{ color: palette.text, fontWeight: '900', marginTop: 8 }}>Authorities Notified</Text>
                   <Text style={{ color: palette.textMuted, marginTop: 4, fontWeight: '800' }}>
-                    {[activeAlert.acks?.TEMPLE_STAFF?.ackedAt, activeAlert.acks?.POLICE?.ackedAt, activeAlert.acks?.TRANSPORT?.ackedAt].filter(Boolean).length} / 3 Authorities Acknowledged
+                    {[activeAlert.acks?.TEMPLE_AGENCY?.ackedAt, activeAlert.acks?.POLICE?.ackedAt, activeAlert.acks?.TRANSPORT?.ackedAt].filter(Boolean).length} / 3 Authorities Acknowledged
                   </Text>
                 </View>
               ) : (
@@ -296,7 +315,7 @@ export function AlertsScreen() {
         </>
       )}
 
-      {!list.length && (
+      {!list.length && live && (
         <View style={[styles.card, { marginTop: 8 }]}>
           <Text style={{ color: palette.textMuted, textAlign: 'center' }}>No alerts</Text>
         </View>

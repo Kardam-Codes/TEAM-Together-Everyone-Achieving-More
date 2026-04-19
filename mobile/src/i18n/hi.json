@@ -1,0 +1,23 @@
+{
+  "translation": {
+    "dashboard": "डैशबोर्ड",
+    "policeDashboard": "पुलिस डैशबोर्ड",
+    "transportDashboard": "परिवहन डैशबोर्ड",
+    "adminDashboard": "एडमिन डैशबोर्ड",
+    "agencyDashboard": "एजेंसी डैशबोर्ड",
+    "settings": "सेटिंग्स",
+    "logout": "लॉग आउट",
+    "language": "भाषा",
+    "darkMode": "डार्क मोड",
+    "crowdDensity": "भीड़ घनत्व",
+    "activeAlerts": "सक्रिय अलर्ट",
+    "activeCameras": "सक्रिय कैमरे",
+    "addCamera": "कैमरा जोड़ें",
+    "save": "सहेजें",
+    "username": "उपयोगकर्ता नाम",
+    "password": "पासवर्ड",
+    "login": "लॉग इन",
+    "signup": "साइन अप",
+    "role": "भूमिका"
+  }
+}

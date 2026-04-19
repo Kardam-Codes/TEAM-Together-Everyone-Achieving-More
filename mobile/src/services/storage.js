@@ -7,7 +7,17 @@ const KEYS = {
   role: 'role',
   templeId: 'templeId',
   tableName: 'tableName',
+  token: 'jwt_token',
 };
+
+export async function getStoredToken() {
+  return AsyncStorage.getItem(KEYS.token);
+}
+
+export async function setStoredToken(token) {
+  if (!token) return AsyncStorage.removeItem(KEYS.token);
+  return AsyncStorage.setItem(KEYS.token, token);
+}
 
 export async function getStoredRole() {
   return AsyncStorage.getItem(KEYS.role);

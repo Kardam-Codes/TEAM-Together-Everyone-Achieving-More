@@ -7,7 +7,7 @@ function newId(prefix) {
   return `${prefix}_${crypto.randomUUID()}`;
 }
 
-const ROLES = ["TEMPLE_STAFF", "POLICE", "TRANSPORT", "ADMIN"];
+const ROLES = ["TEMPLE_AGENCY", "POLICE", "TRANSPORT", "ADMIN"];
 
 const store = {
   temples: [],
@@ -15,6 +15,8 @@ const store = {
   devices: [], // { id, role, expoPushToken, lastSeenAt }
   alertsActive: [], // active alert objects
   alertsResolved: [], // resolved alert objects (archived)
+  users: [], // { id, username, passwordHash, role }
+  cameras: [], // { id, cameraId, area, roles, feedUrl }
 };
 
 function getDefaultSomnathTemple() {
@@ -84,6 +86,41 @@ function upsertDevice({ role, expoPushToken }) {
   return device;
 }
 
+function createUser({ username, passwordHash, role }) {
+  const normalizedRole = ROLES.includes(role) ? role : null;
+  if (!normalizedRole) throw new Error("Invalid role");
+  const existing = store.users.find(u => u.username === username);
+  if (existing) throw new Error("Username already taken");
+  
+  const user = { id: newId("user"), username, passwordHash, role };
+  store.users.push(user);
+  return user;
+}
+
+function findUserByUsername(username) {
+  return store.users.find(u => u.username === username) || null;
+}
+
+function createCamera({ cameraId, area, roles, feedUrl }) {
+  const existing = store.cameras.find(c => c.cameraId === cameraId);
+  if (existing) throw new Error("Camera ID already exists");
+  
+  const camera = {
+    id: newId("cam"),
+    cameraId,
+    area,
+    roles: Array.isArray(roles) ? roles : [],
+    feedUrl: feedUrl || null,
+    status: 'ONLINE'
+  };
+  store.cameras.push(camera);
+  return camera;
+}
+
+function listCameras() {
+  return store.cameras;
+}
+
 module.exports = {
   ROLES,
   store,
@@ -92,5 +129,9 @@ module.exports = {
   createTemple,
   createCorridor,
   upsertDevice,
+  createUser,
+  findUserByUsername,
+  createCamera,
+  listCameras
 };
 

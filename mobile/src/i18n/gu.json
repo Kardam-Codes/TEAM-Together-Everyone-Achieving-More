@@ -1,0 +1,23 @@
+{
+  "translation": {
+    "dashboard": "ડેશબોર્ડ",
+    "policeDashboard": "પોલીસ ડેશબોર્ડ",
+    "transportDashboard": "ટ્રાન્સપોર્ટ ડેશબોર્ડ",
+    "adminDashboard": "એડમિન ડેશબોર્ડ",
+    "agencyDashboard": "એજન્સી ડેશબોર્ડ",
+    "settings": "સેટિંગ્સ",
+    "logout": "લૉગઆઉટ",
+    "language": "ભાષા",
+    "darkMode": "ડાર્ક મોડ",
+    "crowdDensity": "ભીડ ઘનતા",
+    "activeAlerts": "સક્રિય ચેતવણીઓ",
+    "activeCameras": "સક્રિય કેમેરા",
+    "addCamera": "કેમેરા ઉમેરો",
+    "save": "સાચવો",
+    "username": "વપરાશકર્તા નામ",
+    "password": "પાસવર્ડ",
+    "login": "લોગિન",
+    "signup": "સાઇન અપ",
+    "role": "ભૂમિકા"
+  }
+}

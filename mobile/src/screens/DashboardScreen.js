@@ -4,6 +4,8 @@
 import React, { useMemo } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { useTranslation } from 'react-i18next';
+
 import { useAuth } from '../context/AuthContext';
 import { useLive } from '../context/LiveContext';
 import { ROLE_LABELS } from '../constants/roles';
@@ -37,8 +39,9 @@ function AckDot({ label, state }) {
 }
 
 export function DashboardScreen() {
-  const { role, logout } = useAuth();
+  const { role, username, logout } = useAuth();
   const { temples, templeId, setTempleId, live, tableName, setTableName, selectedCamera, globalSeverity, mostSevereAlert } = useLive();
+  const { t } = useTranslation();
 
   const corridors = useMemo(() => {
     const temple = temples.find(t => t.id === templeId);
@@ -49,18 +52,37 @@ export function DashboardScreen() {
   const score = selectedCamera?.pressure_score ?? 0;
   const countdown = selectedCamera?.crush_in ? `${String(selectedCamera.crush_in).padStart(2, '0')}:00` : '--:--';
 
+  let roleDashboardKey = 'dashboard';
+  if (role === 'POLICE') roleDashboardKey = 'policeDashboard';
+  else if (role === 'TRANSPORT') roleDashboardKey = 'transportDashboard';
+  else if (role === 'ADMIN') roleDashboardKey = 'adminDashboard';
+  else if (role === 'TEMPLE_AGENCY') roleDashboardKey = 'agencyDashboard';
+
   return (
     <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: 18 }]}>
       <View style={styles.card}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={styles.sectionTitle}>Dashboard</Text>
-          <Pressable onPress={() => logout()} style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: palette.dangerSoft, borderRadius: 6 }}>
-            <Text style={{ color: palette.danger, fontSize: 12, fontWeight: '800' }}>LOGOUT</Text>
-          </Pressable>
+          <Text style={styles.sectionTitle}>{t(roleDashboardKey)}</Text>
         </View>
         <Text style={styles.sectionSubtitle}>
-          Role: {ROLE_LABELS[role]} · Temple: {templeId}
+          Welcome, {username} · Temple: {templeId}
         </Text>
+
+        {/* Summary Cards */}
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 15 }}>
+          <View style={{ flex: 1, backgroundColor: palette.surfaceDark, padding: 15, borderRadius: 10 }}>
+            <Text style={{ color: palette.textMuted, fontSize: 12 }}>{t('crowdDensity')}</Text>
+            <Text style={{ color: palette.text, fontSize: 24, fontWeight: 'bold' }}>{score.toFixed(1)}</Text>
+          </View>
+          <View style={{ flex: 1, backgroundColor: palette.surfaceDark, padding: 15, borderRadius: 10 }}>
+            <Text style={{ color: palette.textMuted, fontSize: 12 }}>{t('activeAlerts')}</Text>
+            <Text style={{ color: palette.danger, fontSize: 24, fontWeight: 'bold' }}>{mostSevereAlert ? 1 : 0}</Text>
+          </View>
+          <View style={{ flex: 1, backgroundColor: palette.surfaceDark, padding: 15, borderRadius: 10 }}>
+            <Text style={{ color: palette.textMuted, fontSize: 12 }}>{t('activeCameras')}</Text>
+            <Text style={{ color: palette.safe, fontSize: 24, fontWeight: 'bold' }}>{corridors.length}</Text>
+          </View>
+        </View>
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
           {temples.map(t => (
             <Pressable
@@ -165,7 +187,7 @@ export function DashboardScreen() {
         {mostSevereAlert ? (
           <View style={{ marginTop: 12, gap: 10 }}>
             <AckDot label="Police" state={mostSevereAlert.acks?.POLICE} />
-            <AckDot label="Temple" state={mostSevereAlert.acks?.TEMPLE_STAFF} />
+            <AckDot label="Temple" state={mostSevereAlert.acks?.TEMPLE_AGENCY} />
             <AckDot label="Transport" state={mostSevereAlert.acks?.TRANSPORT} />
           </View>
         ) : (

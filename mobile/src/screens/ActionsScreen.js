@@ -98,7 +98,7 @@ function ActionCard({ action, isPrimary, onAction }) {
 
   const icons = {
     POLICE: 'shield',
-    TEMPLE_STAFF: 'business',
+    TEMPLE_AGENCY: 'business',
     TRANSPORT: 'bus',
   };
 
@@ -210,14 +210,14 @@ export function ActionsScreen() {
       <Panel
         title="Temple Trust"
         icon="business"
-        expanded={expandedKey === ROLES.TEMPLE_STAFF}
-        onToggle={() => setExpanded(expandedKey === ROLES.TEMPLE_STAFF ? null : ROLES.TEMPLE_STAFF)}
-        highlight={role === ROLES.TEMPLE_STAFF}
+        expanded={expandedKey === ROLES.TEMPLE_AGENCY}
+        onToggle={() => setExpanded(expandedKey === ROLES.TEMPLE_AGENCY ? null : ROLES.TEMPLE_AGENCY)}
+        highlight={role === ROLES.TEMPLE_AGENCY}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Text style={{ color: palette.textMuted, fontWeight: '800' }}>Recommended:</Text>
           <Text style={{ color: palette.text, fontWeight: '900', flex: 1 }}>
-            {mostSevereAlert.actions?.TEMPLE_STAFF?.recommended || 'Pause entry'}
+            {mostSevereAlert.actions?.TEMPLE_AGENCY?.recommended || 'Pause entry'}
           </Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
@@ -226,16 +226,16 @@ export function ActionsScreen() {
             paddingHorizontal: 10, 
             paddingVertical: 4, 
             borderRadius: 4, 
-            backgroundColor: mostSevereAlert.actions?.TEMPLE_STAFF?.status === 'HOLD_ACTIVE' ? palette.warningSoft : palette.surfaceMuted 
+            backgroundColor: mostSevereAlert.actions?.TEMPLE_AGENCY?.status === 'HOLD_ACTIVE' ? palette.warningSoft : palette.surfaceMuted 
           }}>
-            <Text style={{ color: mostSevereAlert.actions?.TEMPLE_STAFF?.status === 'HOLD_ACTIVE' ? palette.warning : palette.text, fontWeight: '900' }}>
-              {mostSevereAlert.actions?.TEMPLE_STAFF?.status || 'PENDING'}
+            <Text style={{ color: mostSevereAlert.actions?.TEMPLE_AGENCY?.status === 'HOLD_ACTIVE' ? palette.warning : palette.text, fontWeight: '900' }}>
+              {mostSevereAlert.actions?.TEMPLE_AGENCY?.status || 'PENDING'}
             </Text>
           </View>
         </View>
-        {role === ROLES.TEMPLE_STAFF ? (
+        {role === ROLES.TEMPLE_AGENCY ? (
           <View style={{ marginTop: 14 }}>
-            <ActionButtons onSet={s => setStatus(ROLES.TEMPLE_STAFF, s)} primaryLabel="HOLD_ACTIVE" secondaryLabel="REDIRECT" tertiaryLabel="RESUME" />
+            <ActionButtons onSet={s => setStatus(ROLES.TEMPLE_AGENCY, s)} primaryLabel="HOLD_ACTIVE" secondaryLabel="REDIRECT" tertiaryLabel="RESUME" />
           </View>
         ) : null}
       </Panel>

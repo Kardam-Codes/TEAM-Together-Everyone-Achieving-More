@@ -30,6 +30,7 @@ export function LiveProvider({ children }) {
   const [alertsActive, setAlertsActive] = useState([]);
   const [alertsResolved, setAlertsResolved] = useState([]);
   const [logs, setLogs] = useState([]);
+  const [liveError, setLiveError] = useState(null);
 
   const [replay, setReplay] = useState({ mode: 'LIVE', paused: false, speed: 1 });
 
@@ -90,12 +91,14 @@ export function LiveProvider({ children }) {
         const data = await fetchLiveState({ signal: controller.signal });
         if (!alive) return;
         setLive(data);
+        setLiveError(null);
         if (!tableName) {
           const firstKey = Object.keys(data?.cameras || {})[0];
           if (firstKey) setTableName(firstKey);
         }
       } catch (err) {
-        // keep last good
+        if (!alive) return;
+        setLiveError(err.message || 'Failed to fetch live data');
       }
     }
 
@@ -186,6 +189,7 @@ export function LiveProvider({ children }) {
       logs,
       replay,
       mostSevereAlert,
+      liveError,
       async acknowledge(alertId, role) {
         return postAck({ alertId, role });
       },

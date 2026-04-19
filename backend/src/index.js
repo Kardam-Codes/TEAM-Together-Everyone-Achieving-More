@@ -14,9 +14,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Placeholder for mounting routes - routes will be added in liveRoutes.js
+// Mount routes
 const liveRoutes = require('./routes/liveRoutes');
+const authRoutes = require('./routes/authRoutes');
+const cameraRoutes = require('./routes/cameraRoutes');
+
 app.use('/api', liveRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/cameras', cameraRoutes);
 
 const PORT = process.env.PORT || 3000;
 

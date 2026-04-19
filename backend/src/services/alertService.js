@@ -25,8 +25,8 @@ function defaultAcks() {
 
 function defaultActions() {
   return {
-    TEMPLE_STAFF: {
-      role: "TEMPLE_STAFF",
+    TEMPLE_AGENCY: {
+      role: "TEMPLE_AGENCY",
       recommended: "Pause entry / hold incoming queue at outer gate.",
       status: "PENDING",
       updatedAt: null,
@@ -130,6 +130,17 @@ function updateAlertsFromLiveStates({ templeId, corridorStates }) {
       store.alertsActive = store.alertsActive.slice(0, 200);
 
       if (alert.severity === "DANGER") {
+        // ADMIN Auto-Trigger Logic: Automatically dispatch Police and Transport
+        if (alert.actions?.POLICE) {
+          alert.actions.POLICE.status = "DISPATCHED";
+          alert.actions.POLICE.notes = "[AUTO-TRIGGER] Automatically dispatched due to DANGER level.";
+          alert.actions.POLICE.updatedAt = tickAt;
+        }
+        if (alert.actions?.TRANSPORT) {
+          alert.actions.TRANSPORT.status = "DISPATCHED";
+          alert.actions.TRANSPORT.notes = "[AUTO-TRIGGER] Automatically dispatched due to DANGER level.";
+          alert.actions.TRANSPORT.updatedAt = tickAt;
+        }
         // fire-and-forget best-effort
         maybeNotifyDanger(alert, { reason: "new_danger" });
       }

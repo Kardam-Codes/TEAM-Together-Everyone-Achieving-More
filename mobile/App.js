@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { LiveProvider } from './src/context/LiveContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { registerDevice } from './src/api/liveClient';
+import './src/i18n'; // Initialize i18n
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

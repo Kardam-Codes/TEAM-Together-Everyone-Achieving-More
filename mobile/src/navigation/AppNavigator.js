@@ -8,12 +8,13 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useAuth } from '../context/AuthContext';
-import { RoleSelectScreen } from '../screens/RoleSelectScreen';
+import { LoginScreen } from '../screens/LoginScreen';
+import { SignupScreen } from '../screens/SignupScreen';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { AlertsScreen } from '../screens/AlertsScreen';
 import { ActionsScreen } from '../screens/ActionsScreen';
 import { AnalyticsScreen } from '../screens/AnalyticsScreen';
-import { LogScreen } from '../screens/LogScreen';
+import { SettingsScreen } from '../screens/SettingsScreen';
 import { palette } from '../theme';
 
 const Stack = createNativeStackNavigator();
@@ -33,7 +34,7 @@ function MainTabs() {
           else if (route.name === 'Alerts') iconName = focused ? 'warning' : 'warning-outline';
           else if (route.name === 'Actions') iconName = focused ? 'construct' : 'construct-outline';
           else if (route.name === 'Analytics') iconName = focused ? 'analytics' : 'analytics-outline';
-          else if (route.name === 'Log') iconName = focused ? 'document-text' : 'document-text-outline';
+          else if (route.name === 'Settings') iconName = focused ? 'settings' : 'settings-outline';
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarLabel: ({ focused, color }) => (
@@ -45,7 +46,7 @@ function MainTabs() {
       <Tabs.Screen name="Alerts" component={AlertsScreen} />
       <Tabs.Screen name="Actions" component={ActionsScreen} />
       <Tabs.Screen name="Analytics" component={AnalyticsScreen} />
-      <Tabs.Screen name="Log" component={LogScreen} />
+      <Tabs.Screen name="Settings" component={SettingsScreen} />
     </Tabs.Navigator>
   );
 }
@@ -59,7 +60,10 @@ export function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!role ? (
-          <Stack.Screen name="RoleSelect" component={RoleSelectScreen} />
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Signup" component={SignupScreen} />
+          </>
         ) : (
           <Stack.Screen name="Main" component={MainTabs} />
         )}
@@ -67,4 +71,3 @@ export function AppNavigator() {
     </NavigationContainer>
   );
 }
-
